@@ -93,8 +93,8 @@ A Premium Digital Wellbeing, Focus, Productivity, and Addiction Recovery App bui
 * **Architecture:** Clean Architecture + MVVM
 * **Local Database:** Hive or Isar
 
-### Backend (Firebase)
-* Firebase Auth, Firestore, Firebase Storage, Firebase Analytics, Firebase Messaging, Crashlytics.
+### Backend (Supabase)
+* Supabase Auth (Email/Socials), Supabase PostgreSQL Database, Supabase Storage.
 
 ### Native Android Integration
 * **Accessibility Service:** For real-time app/web blocking and layout inspection.
