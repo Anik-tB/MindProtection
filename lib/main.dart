@@ -1,11 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'core/db/isar_service.dart';
+import 'core/network/supabase_config.dart';
 import 'core/theme/app_theme.dart';
 import 'features/dashboard/presentation/views/main_navigation_shell.dart';
 
-void main() {
+void main() async {
   // Ensure Flutter binding is initialized
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialize Isar Local Database
+  await IsarService.init();
+
+  // Initialize Supabase Cloud Backend
+  await Supabase.initialize(
+    url: SupabaseConfig.url,
+    anonKey: SupabaseConfig.anonKey,
+  );
   
   runApp(
     const ProviderScope(
