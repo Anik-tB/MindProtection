@@ -10,7 +10,7 @@ class AppTheme {
   static const Color secondary = Color(0xFF06B6D4); // Neon Cyan
   static const Color error = Color(0xFFF43F5E); // Glowing Rose
   static const Color success = Color(0xFF10B981); // Emerald Green
-  
+
   static const Color textPrimary = Color(0xFFF8FAFC);
   static const Color textSecondary = Color(0xFF94A3B8);
 
@@ -23,7 +23,6 @@ class AppTheme {
       colorScheme: const ColorScheme.dark(
         primary: primary,
         secondary: secondary,
-        background: background,
         surface: surface,
         error: error,
         onError: Colors.white,
@@ -69,10 +68,7 @@ class AppTheme {
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
-          side: const BorderSide(
-            color: Color(0xFF2E334D),
-            width: 1,
-          ),
+          side: const BorderSide(color: Color(0xFF2E334D), width: 1),
         ),
       ),
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(

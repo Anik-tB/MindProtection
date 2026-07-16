@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -17,12 +16,8 @@ class MockAuthService extends SupabaseAuthService {
   User? get currentUser => null;
 
   @override
-  Stream<AuthState> get authStateChanges => Stream.value(
-        const AuthState(
-          AuthChangeEvent.signedOut,
-          null,
-        ),
-      );
+  Stream<AuthState> get authStateChanges =>
+      Stream.value(const AuthState(AuthChangeEvent.signedOut, null));
 
   @override
   bool get hasSession => false;
@@ -32,13 +27,13 @@ void main() {
   // Disable Google Fonts runtime network fetching during tests
   GoogleFonts.config.allowRuntimeFetching = false;
 
-  testWidgets('MindProtection login gate smoke test', (WidgetTester tester) async {
+  testWidgets('MindProtection login gate smoke test', (
+    WidgetTester tester,
+  ) async {
     // Build our app wrapped in ProviderScope with overridden auth providers.
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [
-          authServiceProvider.overrideWithValue(MockAuthService()),
-        ],
+        overrides: [authServiceProvider.overrideWithValue(MockAuthService())],
         child: const MindProtectionApp(),
       ),
     );

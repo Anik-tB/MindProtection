@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:mind_protection/core/network/supabase_auth_service.dart';
 import 'package:mind_protection/features/dashboard/presentation/views/main_navigation_shell.dart';
 import 'package:mind_protection/features/auth/presentation/views/login_view.dart';
@@ -26,16 +25,10 @@ class AuthGate extends ConsumerWidget {
           return const LoginView();
         }
       },
-      loading: () => const Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(),
-        ),
-      ),
-      error: (err, stack) => Scaffold(
-        body: Center(
-          child: Text('Authentication Error: $err'),
-        ),
-      ),
+      loading: () =>
+          const Scaffold(body: Center(child: CircularProgressIndicator())),
+      error: (err, stack) =>
+          Scaffold(body: Center(child: Text('Authentication Error: $err'))),
     );
   }
 }

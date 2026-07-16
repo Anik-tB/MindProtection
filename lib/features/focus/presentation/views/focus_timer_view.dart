@@ -6,7 +6,7 @@ class FocusTimerView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
@@ -20,10 +20,7 @@ class FocusTimerView extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Focus Arena',
-                      style: theme.textTheme.displayMedium,
-                    ),
+                    Text('Focus Arena', style: theme.textTheme.displayMedium),
                     const SizedBox(height: 4),
                     Text(
                       'Unleash your potential, eliminate distractions',
@@ -45,9 +42,13 @@ class FocusTimerView extends StatelessWidget {
                       height: 250,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: theme.colorScheme.primary.withOpacity(0.02),
+                        color: theme.colorScheme.primary.withValues(
+                          alpha: 0.02,
+                        ),
                         border: Border.all(
-                          color: theme.colorScheme.primary.withOpacity(0.1),
+                          color: theme.colorScheme.primary.withValues(
+                            alpha: 0.1,
+                          ),
                           width: 2,
                         ),
                       ),
@@ -78,9 +79,14 @@ class FocusTimerView extends StatelessWidget {
                         ),
                         const SizedBox(height: 8),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 4,
+                          ),
                           decoration: BoxDecoration(
-                            color: theme.colorScheme.primary.withOpacity(0.15),
+                            color: theme.colorScheme.primary.withValues(
+                              alpha: 0.15,
+                            ),
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Text(
@@ -106,9 +112,17 @@ class FocusTimerView extends StatelessWidget {
                 children: [
                   _buildModeButton(context, label: 'Pomodoro', isActive: true),
                   const SizedBox(width: 10),
-                  _buildModeButton(context, label: 'Short Break', isActive: false),
+                  _buildModeButton(
+                    context,
+                    label: 'Short Break',
+                    isActive: false,
+                  ),
                   const SizedBox(width: 10),
-                  _buildModeButton(context, label: 'Long Break', isActive: false),
+                  _buildModeButton(
+                    context,
+                    label: 'Long Break',
+                    isActive: false,
+                  ),
                 ],
               ),
               const SizedBox(height: 50),
@@ -121,7 +135,9 @@ class FocusTimerView extends StatelessWidget {
                   IconButton(
                     onPressed: () {},
                     iconSize: 32,
-                    color: theme.textTheme.bodyMedium?.color?.withOpacity(0.5),
+                    color: theme.textTheme.bodyMedium?.color?.withValues(
+                      alpha: 0.5,
+                    ),
                     icon: const Icon(Icons.replay),
                   ),
                   const SizedBox(width: 25),
@@ -134,7 +150,9 @@ class FocusTimerView extends StatelessWidget {
                       color: theme.colorScheme.primary,
                       boxShadow: [
                         BoxShadow(
-                          color: theme.colorScheme.primary.withOpacity(0.4),
+                          color: theme.colorScheme.primary.withValues(
+                            alpha: 0.4,
+                          ),
                           blurRadius: 15,
                           offset: const Offset(0, 5),
                         ),
@@ -142,7 +160,11 @@ class FocusTimerView extends StatelessWidget {
                     ),
                     child: IconButton(
                       onPressed: () {},
-                      icon: const Icon(Icons.play_arrow, color: Colors.white, size: 36),
+                      icon: const Icon(
+                        Icons.play_arrow,
+                        color: Colors.white,
+                        size: 36,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 25),
@@ -150,7 +172,7 @@ class FocusTimerView extends StatelessWidget {
                   IconButton(
                     onPressed: () {},
                     iconSize: 28,
-                    color: theme.colorScheme.error.withOpacity(0.8),
+                    color: theme.colorScheme.error.withValues(alpha: 0.8),
                     icon: const Icon(Icons.security_sharp),
                   ),
                 ],
@@ -164,11 +186,23 @@ class FocusTimerView extends StatelessWidget {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
-                      _buildStatColumn(context, label: 'Sessions Completed', value: '3/4'),
+                      _buildStatColumn(
+                        context,
+                        label: 'Sessions Completed',
+                        value: '3/4',
+                      ),
                       Container(width: 1, height: 40, color: Colors.white12),
-                      _buildStatColumn(context, label: 'Total Focus', value: '75 min'),
+                      _buildStatColumn(
+                        context,
+                        label: 'Total Focus',
+                        value: '75 min',
+                      ),
                       Container(width: 1, height: 40, color: Colors.white12),
-                      _buildStatColumn(context, label: 'Subject', value: 'Chemistry'),
+                      _buildStatColumn(
+                        context,
+                        label: 'Subject',
+                        value: 'Chemistry',
+                      ),
                     ],
                   ),
                 ),
@@ -180,12 +214,18 @@ class FocusTimerView extends StatelessWidget {
     );
   }
 
-  Widget _buildModeButton(BuildContext context, {required String label, required bool isActive}) {
+  Widget _buildModeButton(
+    BuildContext context, {
+    required String label,
+    required bool isActive,
+  }) {
     final theme = Theme.of(context);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: isActive ? theme.colorScheme.primary.withOpacity(0.1) : Colors.transparent,
+        color: isActive
+            ? theme.colorScheme.primary.withValues(alpha: 0.1)
+            : Colors.transparent,
         borderRadius: BorderRadius.circular(30),
         border: Border.all(
           color: isActive ? theme.colorScheme.primary : Colors.white12,
@@ -195,14 +235,20 @@ class FocusTimerView extends StatelessWidget {
       child: Text(
         label,
         style: theme.textTheme.bodyMedium?.copyWith(
-          color: isActive ? theme.colorScheme.primary : theme.textTheme.bodyMedium?.color,
+          color: isActive
+              ? theme.colorScheme.primary
+              : theme.textTheme.bodyMedium?.color,
           fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
         ),
       ),
     );
   }
 
-  Widget _buildStatColumn(BuildContext context, {required String label, required String value}) {
+  Widget _buildStatColumn(
+    BuildContext context, {
+    required String label,
+    required String value,
+  }) {
     final theme = Theme.of(context);
     return Column(
       children: [
@@ -214,12 +260,7 @@ class FocusTimerView extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 4),
-        Text(
-          label,
-          style: theme.textTheme.bodyMedium?.copyWith(
-            fontSize: 11,
-          ),
-        ),
+        Text(label, style: theme.textTheme.bodyMedium?.copyWith(fontSize: 11)),
       ],
     );
   }

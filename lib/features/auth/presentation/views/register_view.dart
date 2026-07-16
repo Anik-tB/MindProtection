@@ -35,16 +35,20 @@ class _RegisterViewState extends ConsumerState<RegisterView> {
     });
 
     try {
-      await ref.read(authServiceProvider).signUp(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
-        username: _usernameController.text.trim(),
-      );
-      
+      await ref
+          .read(authServiceProvider)
+          .signUp(
+            email: _emailController.text.trim(),
+            password: _passwordController.text.trim(),
+            username: _usernameController.text.trim(),
+          );
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Registration successful! Please check your email inbox to verify your account.'),
+            content: Text(
+              'Registration successful! Please check your email inbox to verify your account.',
+            ),
             backgroundColor: Colors.green,
             duration: Duration(seconds: 5),
           ),
@@ -141,7 +145,9 @@ class _RegisterViewState extends ConsumerState<RegisterView> {
                       if (value == null || value.isEmpty) {
                         return 'Please enter your email';
                       }
-                      if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+                      if (!RegExp(
+                        r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                      ).hasMatch(value)) {
                         return 'Please enter a valid email address';
                       }
                       return null;
@@ -158,7 +164,9 @@ class _RegisterViewState extends ConsumerState<RegisterView> {
                       prefixIcon: const Icon(Icons.lock_outlined),
                       suffixIcon: IconButton(
                         icon: Icon(
-                          _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                          _obscurePassword
+                              ? Icons.visibility_off_outlined
+                              : Icons.visibility_outlined,
                         ),
                         onPressed: () {
                           setState(() {
@@ -213,7 +221,9 @@ class _RegisterViewState extends ConsumerState<RegisterView> {
                         borderRadius: BorderRadius.circular(16),
                       ),
                       elevation: 5,
-                      shadowColor: theme.colorScheme.primary.withOpacity(0.3),
+                      shadowColor: theme.colorScheme.primary.withValues(
+                        alpha: 0.3,
+                      ),
                     ),
                     child: _isLoading
                         ? const SizedBox(

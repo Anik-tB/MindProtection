@@ -64,15 +64,12 @@ class _PlannerViewState extends ConsumerState<PlannerView> {
                     ),
                   ),
                   const SizedBox(height: 20),
-                  
+
                   // Priority Select
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        'Priority Level:',
-                        style: theme.textTheme.bodyLarge,
-                      ),
+                      Text('Priority Level:', style: theme.textTheme.bodyLarge),
                       Row(
                         children: ['Low', 'Medium', 'High'].map((priority) {
                           final isSelected = selectedPriority == priority;
@@ -95,19 +92,23 @@ class _PlannerViewState extends ConsumerState<PlannerView> {
                     ],
                   ),
                   const SizedBox(height: 24),
-                  
+
                   // Save Button
                   ElevatedButton(
                     onPressed: () async {
                       final title = titleController.text.trim();
                       if (title.isEmpty) return;
 
-                      await ref.read(taskListProvider.notifier).addTask(
-                        title,
-                        description: descController.text.trim().isEmpty ? null : descController.text.trim(),
-                        scheduleTime: DateTime.now(),
-                        priority: selectedPriority,
-                      );
+                      await ref
+                          .read(taskListProvider.notifier)
+                          .addTask(
+                            title,
+                            description: descController.text.trim().isEmpty
+                                ? null
+                                : descController.text.trim(),
+                            scheduleTime: DateTime.now(),
+                            priority: selectedPriority,
+                          );
 
                       if (context.mounted) {
                         Navigator.of(context).pop();
@@ -121,7 +122,10 @@ class _PlannerViewState extends ConsumerState<PlannerView> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    child: const Text('SAVE TASK', style: TextStyle(fontWeight: FontWeight.bold)),
+                    child: const Text(
+                      'SAVE TASK',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
                   ),
                 ],
               ),
@@ -145,10 +149,7 @@ class _PlannerViewState extends ConsumerState<PlannerView> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Header
-              Text(
-                'Planner & Routines',
-                style: theme.textTheme.displayMedium,
-              ),
+              Text('Planner & Routines', style: theme.textTheme.displayMedium),
               const SizedBox(height: 4),
               Text(
                 'Organize your day for peak discipline',
@@ -164,10 +165,7 @@ class _PlannerViewState extends ConsumerState<PlannerView> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    'Daily Tasks',
-                    style: theme.textTheme.titleLarge,
-                  ),
+                  Text('Daily Tasks', style: theme.textTheme.titleLarge),
                   TextButton.icon(
                     onPressed: () => _showAddTaskSheet(context),
                     icon: const Icon(Icons.add, size: 18),
@@ -186,7 +184,12 @@ class _PlannerViewState extends ConsumerState<PlannerView> {
                       child: Center(
                         child: Column(
                           children: [
-                            Icon(Icons.assignment_turned_in_outlined, size: 48, color: theme.textTheme.bodyMedium?.color?.withOpacity(0.3)),
+                            Icon(
+                              Icons.assignment_turned_in_outlined,
+                              size: 48,
+                              color: theme.textTheme.bodyMedium?.color
+                                  ?.withValues(alpha: 0.3),
+                            ),
                             const SizedBox(height: 12),
                             Text(
                               'No tasks planned for today.',
@@ -201,7 +204,8 @@ class _PlannerViewState extends ConsumerState<PlannerView> {
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     itemCount: tasks.length,
-                    separatorBuilder: (context, index) => const SizedBox(height: 10),
+                    separatorBuilder: (context, index) =>
+                        const SizedBox(height: 10),
                     itemBuilder: (context, index) {
                       final task = tasks[index];
                       return Dismissible(
@@ -217,7 +221,9 @@ class _PlannerViewState extends ConsumerState<PlannerView> {
                           child: const Icon(Icons.delete, color: Colors.white),
                         ),
                         onDismissed: (direction) async {
-                          await ref.read(taskListProvider.notifier).deleteTask(task.id);
+                          await ref
+                              .read(taskListProvider.notifier)
+                              .deleteTask(task.id);
                           if (context.mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(content: Text('Task deleted')),
@@ -238,23 +244,28 @@ class _PlannerViewState extends ConsumerState<PlannerView> {
                 error: (err, stack) => Center(
                   child: Padding(
                     padding: const EdgeInsets.all(20.0),
-                    child: Text('Error loading tasks: $err', style: const TextStyle(color: Colors.red)),
+                    child: Text(
+                      'Error loading tasks: $err',
+                      style: const TextStyle(color: Colors.red),
+                    ),
                   ),
                 ),
               ),
               const SizedBox(height: 25),
 
               // Section: Routines
-              Text(
-                'Habitual Routines',
-                style: theme.textTheme.titleLarge,
-              ),
+              Text('Habitual Routines', style: theme.textTheme.titleLarge),
               const SizedBox(height: 15),
               _buildRoutineCard(
                 context,
                 title: 'Morning Routine',
                 time: '06:00 AM - 07:30 AM',
-                items: ['Drink water', '15 mins stretching', 'Morning Prayer', 'No Phone for 1 hour'],
+                items: [
+                  'Drink water',
+                  '15 mins stretching',
+                  'Morning Prayer',
+                  'No Phone for 1 hour',
+                ],
                 icon: Icons.wb_sunny_outlined,
                 iconColor: Colors.amber,
               ),
@@ -263,7 +274,12 @@ class _PlannerViewState extends ConsumerState<PlannerView> {
                 context,
                 title: 'Night Routine',
                 time: '10:00 PM - 11:00 PM',
-                items: ['Plan next day', 'Review streaks', 'Eye Care (20-20-20)', 'Read a book'],
+                items: [
+                  'Plan next day',
+                  'Review streaks',
+                  'Eye Care (20-20-20)',
+                  'Read a book',
+                ],
                 icon: Icons.nights_stay_outlined,
                 iconColor: Colors.indigoAccent,
               ),
@@ -276,7 +292,7 @@ class _PlannerViewState extends ConsumerState<PlannerView> {
 
   Widget _buildTaskCard(BuildContext context, TaskModel task) {
     final theme = Theme.of(context);
-    
+
     Color priorityColor;
     switch (task.priority.toLowerCase()) {
       case 'high':
@@ -289,7 +305,8 @@ class _PlannerViewState extends ConsumerState<PlannerView> {
         priorityColor = theme.colorScheme.primary;
     }
 
-    final formattedTime = '${task.scheduleTime.hour.toString().padLeft(2, '0')}:${task.scheduleTime.minute.toString().padLeft(2, '0')}';
+    final formattedTime =
+        '${task.scheduleTime.hour.toString().padLeft(2, '0')}:${task.scheduleTime.minute.toString().padLeft(2, '0')}';
 
     return Card(
       child: Padding(
@@ -302,7 +319,9 @@ class _PlannerViewState extends ConsumerState<PlannerView> {
                 await ref.read(taskListProvider.notifier).toggleTask(task.id);
               },
               activeColor: theme.colorScheme.primary,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(4),
+              ),
             ),
             const SizedBox(width: 8),
             Expanded(
@@ -313,8 +332,14 @@ class _PlannerViewState extends ConsumerState<PlannerView> {
                     task.title,
                     style: theme.textTheme.titleLarge?.copyWith(
                       fontSize: 14,
-                      decoration: task.isCompleted ? TextDecoration.lineThrough : null,
-                      color: task.isCompleted ? theme.textTheme.bodyMedium?.color?.withOpacity(0.5) : null,
+                      decoration: task.isCompleted
+                          ? TextDecoration.lineThrough
+                          : null,
+                      color: task.isCompleted
+                          ? theme.textTheme.bodyMedium?.color?.withValues(
+                              alpha: 0.5,
+                            )
+                          : null,
                     ),
                   ),
                   if (task.description != null) ...[
@@ -323,21 +348,35 @@ class _PlannerViewState extends ConsumerState<PlannerView> {
                       task.description!,
                       style: theme.textTheme.bodyMedium?.copyWith(
                         fontSize: 12,
-                        color: theme.textTheme.bodyMedium?.color?.withOpacity(0.7),
+                        color: theme.textTheme.bodyMedium?.color?.withValues(
+                          alpha: 0.7,
+                        ),
                       ),
                     ),
                   ],
                   const SizedBox(height: 6),
                   Row(
                     children: [
-                      Icon(Icons.access_time, size: 12, color: theme.textTheme.bodyMedium?.color),
+                      Icon(
+                        Icons.access_time,
+                        size: 12,
+                        color: theme.textTheme.bodyMedium?.color,
+                      ),
                       const SizedBox(width: 4),
-                      Text(formattedTime, style: theme.textTheme.bodyMedium?.copyWith(fontSize: 11)),
+                      Text(
+                        formattedTime,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontSize: 11,
+                        ),
+                      ),
                       const SizedBox(width: 12),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
-                          color: priorityColor.withOpacity(0.1),
+                          color: priorityColor.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
@@ -382,7 +421,9 @@ class _PlannerViewState extends ConsumerState<PlannerView> {
             width: 48,
             padding: const EdgeInsets.symmetric(vertical: 12),
             decoration: BoxDecoration(
-              color: isActive ? theme.colorScheme.primary : theme.colorScheme.surface,
+              color: isActive
+                  ? theme.colorScheme.primary
+                  : theme.colorScheme.surface,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
                 color: isActive ? theme.colorScheme.primary : Colors.white10,
@@ -395,7 +436,9 @@ class _PlannerViewState extends ConsumerState<PlannerView> {
                   d['day'] as String,
                   style: theme.textTheme.bodyMedium?.copyWith(
                     fontSize: 12,
-                    color: isActive ? Colors.white70 : theme.textTheme.bodyMedium?.color,
+                    color: isActive
+                        ? Colors.white70
+                        : theme.textTheme.bodyMedium?.color,
                   ),
                 ),
                 const SizedBox(height: 6),
@@ -404,7 +447,9 @@ class _PlannerViewState extends ConsumerState<PlannerView> {
                   style: theme.textTheme.titleLarge?.copyWith(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: isActive ? Colors.white : theme.textTheme.titleLarge?.color,
+                    color: isActive
+                        ? Colors.white
+                        : theme.textTheme.titleLarge?.color,
                   ),
                 ),
               ],
@@ -437,9 +482,15 @@ class _PlannerViewState extends ConsumerState<PlannerView> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title, style: theme.textTheme.titleLarge?.copyWith(fontSize: 16)),
+                    Text(
+                      title,
+                      style: theme.textTheme.titleLarge?.copyWith(fontSize: 16),
+                    ),
                     const SizedBox(height: 2),
-                    Text(time, style: theme.textTheme.bodyMedium?.copyWith(fontSize: 12)),
+                    Text(
+                      time,
+                      style: theme.textTheme.bodyMedium?.copyWith(fontSize: 12),
+                    ),
                   ],
                 ),
                 const Spacer(),
@@ -455,18 +506,30 @@ class _PlannerViewState extends ConsumerState<PlannerView> {
               runSpacing: 8,
               children: items.map((item) {
                 return Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.03),
+                    color: Colors.white.withValues(alpha: 0.03),
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(color: Colors.white10),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.check_circle_outline, size: 12, color: theme.colorScheme.primary),
+                      Icon(
+                        Icons.check_circle_outline,
+                        size: 12,
+                        color: theme.colorScheme.primary,
+                      ),
                       const SizedBox(width: 6),
-                      Text(item, style: theme.textTheme.bodyMedium?.copyWith(fontSize: 12)),
+                      Text(
+                        item,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontSize: 12,
+                        ),
+                      ),
                     ],
                   ),
                 );

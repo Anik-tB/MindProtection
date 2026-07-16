@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class DashboardView extends StatelessWidget {
   const DashboardView({super.key});
@@ -7,7 +6,7 @@ class DashboardView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
@@ -37,7 +36,9 @@ class DashboardView extends StatelessWidget {
                   ),
                   CircleAvatar(
                     radius: 24,
-                    backgroundColor: theme.colorScheme.primary.withOpacity(0.1),
+                    backgroundColor: theme.colorScheme.primary.withValues(
+                      alpha: 0.1,
+                    ),
                     child: Icon(
                       Icons.person_outline,
                       color: theme.colorScheme.primary,
@@ -80,10 +81,7 @@ class DashboardView extends StatelessWidget {
               const SizedBox(height: 25),
 
               // Section: Daily Habits / Progress
-              Text(
-                'Today\'s Progress',
-                style: theme.textTheme.titleLarge,
-              ),
+              Text('Today\'s Progress', style: theme.textTheme.titleLarge),
               const SizedBox(height: 15),
               _buildProgressItem(
                 context,
@@ -162,7 +160,9 @@ class DashboardView extends StatelessWidget {
               subtitle,
               style: theme.textTheme.bodyMedium?.copyWith(
                 fontSize: 12,
-                color: theme.textTheme.bodyMedium?.color?.withOpacity(0.7),
+                color: theme.textTheme.bodyMedium?.color?.withValues(
+                  alpha: 0.7,
+                ),
               ),
             ),
           ],
@@ -181,8 +181,8 @@ class DashboardView extends StatelessWidget {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              theme.colorScheme.primary.withOpacity(0.15),
-              theme.colorScheme.secondary.withOpacity(0.05),
+              theme.colorScheme.primary.withValues(alpha: 0.15),
+              theme.colorScheme.secondary.withValues(alpha: 0.05),
             ],
           ),
         ),
@@ -196,14 +196,15 @@ class DashboardView extends StatelessWidget {
                 children: [
                   Text(
                     'Sobriety & Focus Streak',
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      fontSize: 18,
-                    ),
+                    style: theme.textTheme.titleLarge?.copyWith(fontSize: 18),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 5,
+                    ),
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.primary.withOpacity(0.2),
+                      color: theme.colorScheme.primary.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
@@ -285,7 +286,7 @@ class DashboardView extends StatelessWidget {
         child: Row(
           children: [
             CircleAvatar(
-              backgroundColor: color.withOpacity(0.1),
+              backgroundColor: color.withValues(alpha: 0.1),
               radius: 20,
               child: Icon(icon, color: color, size: 20),
             ),

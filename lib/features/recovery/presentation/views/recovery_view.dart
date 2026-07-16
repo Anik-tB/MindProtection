@@ -6,7 +6,7 @@ class RecoveryView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
@@ -15,10 +15,7 @@ class RecoveryView extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Header
-              Text(
-                'Recovery Hub',
-                style: theme.textTheme.displayMedium,
-              ),
+              Text('Recovery Hub', style: theme.textTheme.displayMedium),
               const SizedBox(height: 4),
               Text(
                 'Break free from digital addictions',
@@ -35,10 +32,7 @@ class RecoveryView extends StatelessWidget {
               const SizedBox(height: 25),
 
               // Section: Blockers & Guards
-              Text(
-                'Blocking Guards',
-                style: theme.textTheme.titleLarge,
-              ),
+              Text('Blocking Guards', style: theme.textTheme.titleLarge),
               const SizedBox(height: 15),
               _buildGuardSwitch(
                 context,
@@ -69,10 +63,7 @@ class RecoveryView extends StatelessWidget {
               const SizedBox(height: 25),
 
               // Addiction Relapse Analytics
-              Text(
-                'Relapse Prevention log',
-                style: theme.textTheme.titleLarge,
-              ),
+              Text('Relapse Prevention log', style: theme.textTheme.titleLarge),
               const SizedBox(height: 15),
               Card(
                 child: Padding(
@@ -82,10 +73,15 @@ class RecoveryView extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: theme.colorScheme.primary.withOpacity(0.1),
+                          color: theme.colorScheme.primary.withValues(
+                            alpha: 0.1,
+                          ),
                           shape: BoxShape.circle,
                         ),
-                        child: Icon(Icons.history_toggle_off, color: theme.colorScheme.primary),
+                        child: Icon(
+                          Icons.history_toggle_off,
+                          color: theme.colorScheme.primary,
+                        ),
                       ),
                       const SizedBox(width: 15),
                       Expanded(
@@ -94,20 +90,21 @@ class RecoveryView extends StatelessWidget {
                           children: [
                             Text(
                               'Last Relapse Check',
-                              style: theme.textTheme.titleLarge?.copyWith(fontSize: 15),
+                              style: theme.textTheme.titleLarge?.copyWith(
+                                fontSize: 15,
+                              ),
                             ),
                             const SizedBox(height: 4),
                             Text(
                               'No triggers or relapses reported this week.',
-                              style: theme.textTheme.bodyMedium?.copyWith(fontSize: 12),
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                fontSize: 12,
+                              ),
                             ),
                           ],
                         ),
                       ),
-                      TextButton(
-                        onPressed: () {},
-                        child: const Text('Log'),
-                      ),
+                      TextButton(onPressed: () {}, child: const Text('Log')),
                     ],
                   ),
                 ),
@@ -127,7 +124,7 @@ class RecoveryView extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
           gradient: LinearGradient(
             colors: [
-              theme.colorScheme.error.withOpacity(0.12),
+              theme.colorScheme.error.withValues(alpha: 0.12),
               Colors.transparent,
             ],
             begin: Alignment.topCenter,
@@ -144,15 +141,25 @@ class RecoveryView extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.shield, color: theme.colorScheme.error, size: 20),
+                      Icon(
+                        Icons.shield,
+                        color: theme.colorScheme.error,
+                        size: 20,
+                      ),
                       const SizedBox(width: 8),
                       Text(
                         'Porn & Adult site block',
-                        style: theme.textTheme.titleLarge?.copyWith(fontSize: 16),
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          fontSize: 16,
+                        ),
                       ),
                     ],
                   ),
-                  const Icon(Icons.info_outline, size: 18, color: Colors.white30),
+                  const Icon(
+                    Icons.info_outline,
+                    size: 18,
+                    color: Colors.white30,
+                  ),
                 ],
               ),
               const SizedBox(height: 20),
@@ -173,7 +180,7 @@ class RecoveryView extends StatelessWidget {
                       Text(
                         'Streak Active • Level 2',
                         style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.error.withOpacity(0.8),
+                          color: theme.colorScheme.error.withValues(alpha: 0.8),
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
                         ),
@@ -183,12 +190,18 @@ class RecoveryView extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      border: Border.all(color: theme.colorScheme.error.withOpacity(0.4)),
+                      border: Border.all(
+                        color: theme.colorScheme.error.withValues(alpha: 0.4),
+                      ),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Row(
                       children: [
-                        Icon(Icons.flash_on, color: theme.colorScheme.error, size: 16),
+                        Icon(
+                          Icons.flash_on,
+                          color: theme.colorScheme.error,
+                          size: 16,
+                        ),
                         const SizedBox(width: 4),
                         Text(
                           '12 Days',
@@ -218,8 +231,8 @@ class RecoveryView extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
           gradient: LinearGradient(
             colors: [
-              theme.colorScheme.primary.withOpacity(0.1),
-              theme.colorScheme.secondary.withOpacity(0.05),
+              theme.colorScheme.primary.withValues(alpha: 0.1),
+              theme.colorScheme.secondary.withValues(alpha: 0.05),
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
@@ -251,12 +264,20 @@ class RecoveryView extends StatelessWidget {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: theme.colorScheme.error,
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                   elevation: 5,
-                  shadowColor: theme.colorScheme.error.withOpacity(0.4),
+                  shadowColor: theme.colorScheme.error.withValues(alpha: 0.4),
                 ),
-                child: const Text('LOCK NOW', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                child: const Text(
+                  'LOCK NOW',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                ),
               ),
             ],
           ),
@@ -282,7 +303,7 @@ class RecoveryView extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
+                color: color.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(icon, color: color, size: 22),
@@ -307,7 +328,7 @@ class RecoveryView extends StatelessWidget {
             Switch(
               value: isActive,
               onChanged: (val) {},
-              activeColor: theme.colorScheme.primary,
+              activeThumbColor: theme.colorScheme.primary,
             ),
           ],
         ),
