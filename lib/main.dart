@@ -4,7 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/db/isar_service.dart';
 import 'core/network/supabase_config.dart';
 import 'core/theme/app_theme.dart';
-import 'features/dashboard/presentation/views/main_navigation_shell.dart';
+import 'features/auth/presentation/views/auth_gate.dart';
 
 void main() async {
   // Ensure Flutter binding is initialized
@@ -35,7 +35,7 @@ class MindProtectionApp extends StatelessWidget {
       title: 'MindProtection',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.darkTheme,
-      home: const MainNavigationShell(),
+      home: const AuthGate(),
     );
   }
 }

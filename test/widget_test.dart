@@ -1,23 +1,51 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:mind_protection/main.dart';
+import 'package:mind_protection/core/network/supabase_auth_service.dart';
+
+// Fake Supabase Client to avoid static instance calls in tests
+class FakeSupabaseClient extends Fake implements SupabaseClient {}
+
+// Mock Auth Service that returns signed-out state without calling Supabase.instance
+class MockAuthService extends SupabaseAuthService {
+  MockAuthService() : super(client: FakeSupabaseClient());
+
+  @override
+  User? get currentUser => null;
+
+  @override
+  Stream<AuthState> get authStateChanges => Stream.value(
+        const AuthState(
+          AuthChangeEvent.signedOut,
+          null,
+        ),
+      );
+
+  @override
+  bool get hasSession => false;
+}
 
 void main() {
   // Disable Google Fonts runtime network fetching during tests
   GoogleFonts.config.allowRuntimeFetching = false;
 
-  testWidgets('MindProtection smoke test', (WidgetTester tester) async {
-    // Build our app wrapped in ProviderScope and trigger a frame.
+  testWidgets('MindProtection login gate smoke test', (WidgetTester tester) async {
+    // Build our app wrapped in ProviderScope with overridden auth providers.
     await tester.pumpWidget(
-      const ProviderScope(
-        child: MindProtectionApp(),
+      ProviderScope(
+        overrides: [
+          authServiceProvider.overrideWithValue(MockAuthService()),
+        ],
+        child: const MindProtectionApp(),
       ),
     );
     await tester.pumpAndSettle();
 
-    // Verify that the dashboard header is present.
-    expect(find.text('MindProtection'), findsOneWidget);
-    expect(find.text('Your digital wellbeing companion'), findsOneWidget);
+    // Verify that the login screen elements are present initially.
+    expect(find.text('Welcome Back'), findsOneWidget);
+    expect(find.text('SIGN IN'), findsOneWidget);
   });
 }
