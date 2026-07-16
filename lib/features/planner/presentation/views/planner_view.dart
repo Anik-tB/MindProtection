@@ -1,12 +1,142 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../viewmodels/task_notifier.dart';
+import '../../data/models/task_model.dart';
 
-class PlannerView extends StatelessWidget {
+class PlannerView extends ConsumerStatefulWidget {
   const PlannerView({super.key});
+
+  @override
+  ConsumerState<PlannerView> createState() => _PlannerViewState();
+}
+
+class _PlannerViewState extends ConsumerState<PlannerView> {
+  // Show Bottom Sheet to Add Task
+  void _showAddTaskSheet(BuildContext context) {
+    final theme = Theme.of(context);
+    final titleController = TextEditingController();
+    final descController = TextEditingController();
+    String selectedPriority = 'Medium';
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: theme.colorScheme.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+                top: 24,
+                left: 24,
+                right: 24,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    'Add New Task',
+                    style: theme.textTheme.titleLarge?.copyWith(fontSize: 20),
+                  ),
+                  const SizedBox(height: 20),
+                  TextField(
+                    controller: titleController,
+                    decoration: InputDecoration(
+                      labelText: 'Task Title',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: descController,
+                    decoration: InputDecoration(
+                      labelText: 'Description (Optional)',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  
+                  // Priority Select
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Priority Level:',
+                        style: theme.textTheme.bodyLarge,
+                      ),
+                      Row(
+                        children: ['Low', 'Medium', 'High'].map((priority) {
+                          final isSelected = selectedPriority == priority;
+                          return Padding(
+                            padding: const EdgeInsets.only(left: 8.0),
+                            child: ChoiceChip(
+                              label: Text(priority),
+                              selected: isSelected,
+                              onSelected: (selected) {
+                                if (selected) {
+                                  setModalState(() {
+                                    selectedPriority = priority;
+                                  });
+                                }
+                              },
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  
+                  // Save Button
+                  ElevatedButton(
+                    onPressed: () async {
+                      final title = titleController.text.trim();
+                      if (title.isEmpty) return;
+
+                      await ref.read(taskListProvider.notifier).addTask(
+                        title,
+                        description: descController.text.trim().isEmpty ? null : descController.text.trim(),
+                        scheduleTime: DateTime.now(),
+                        priority: selectedPriority,
+                      );
+
+                      if (context.mounted) {
+                        Navigator.of(context).pop();
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: theme.colorScheme.primary,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text('SAVE TASK', style: TextStyle(fontWeight: FontWeight.bold)),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+    final tasksAsync = ref.watch(taskListProvider);
+
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
@@ -26,11 +156,11 @@ class PlannerView extends StatelessWidget {
               ),
               const SizedBox(height: 25),
 
-              // Calendar mini-strip (visual placeholder)
+              // Calendar mini-strip
               _buildCalendarStrip(context),
               const SizedBox(height: 25),
 
-              // Section: Daily Tasks
+              // Section Header: Daily Tasks
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -39,38 +169,78 @@ class PlannerView extends StatelessWidget {
                     style: theme.textTheme.titleLarge,
                   ),
                   TextButton.icon(
-                    onPressed: () {},
+                    onPressed: () => _showAddTaskSheet(context),
                     icon: const Icon(Icons.add, size: 18),
                     label: const Text('Add Task'),
                   ),
                 ],
               ),
               const SizedBox(height: 10),
-              _buildTaskItem(
-                context,
-                title: 'Solve Chemistry MCQ Past Papers',
-                time: '10:00 AM - 11:30 AM',
-                priority: 'High',
-                priorityColor: theme.colorScheme.error,
-                isCompleted: true,
-              ),
-              const SizedBox(height: 10),
-              _buildTaskItem(
-                context,
-                title: 'Write Flutter Clean Architecture documentation',
-                time: '02:00 PM - 03:30 PM',
-                priority: 'Medium',
-                priorityColor: theme.colorScheme.primary,
-                isCompleted: false,
-              ),
-              const SizedBox(height: 10),
-              _buildTaskItem(
-                context,
-                title: 'Read Biology Chapter 4 summary',
-                time: '06:00 PM - 07:00 PM',
-                priority: 'Low',
-                priorityColor: theme.colorScheme.secondary,
-                isCompleted: false,
+
+              // Tasks Content Area
+              tasksAsync.when(
+                data: (tasks) {
+                  if (tasks.isEmpty) {
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 20.0),
+                      child: Center(
+                        child: Column(
+                          children: [
+                            Icon(Icons.assignment_turned_in_outlined, size: 48, color: theme.textTheme.bodyMedium?.color?.withOpacity(0.3)),
+                            const SizedBox(height: 12),
+                            Text(
+                              'No tasks planned for today.',
+                              style: theme.textTheme.bodyMedium,
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }
+                  return ListView.separated(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: tasks.length,
+                    separatorBuilder: (context, index) => const SizedBox(height: 10),
+                    itemBuilder: (context, index) {
+                      final task = tasks[index];
+                      return Dismissible(
+                        key: Key('task_${task.id}'),
+                        direction: DismissDirection.endToStart,
+                        background: Container(
+                          alignment: Alignment.centerRight,
+                          padding: const EdgeInsets.only(right: 20.0),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.error,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: const Icon(Icons.delete, color: Colors.white),
+                        ),
+                        onDismissed: (direction) async {
+                          await ref.read(taskListProvider.notifier).deleteTask(task.id);
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Task deleted')),
+                            );
+                          }
+                        },
+                        child: _buildTaskCard(context, task),
+                      );
+                    },
+                  );
+                },
+                loading: () => const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(20.0),
+                    child: CircularProgressIndicator(),
+                  ),
+                ),
+                error: (err, stack) => Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(20.0),
+                    child: Text('Error loading tasks: $err', style: const TextStyle(color: Colors.red)),
+                  ),
+                ),
               ),
               const SizedBox(height: 25),
 
@@ -99,6 +269,92 @@ class PlannerView extends StatelessWidget {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTaskCard(BuildContext context, TaskModel task) {
+    final theme = Theme.of(context);
+    
+    Color priorityColor;
+    switch (task.priority.toLowerCase()) {
+      case 'high':
+        priorityColor = theme.colorScheme.error;
+        break;
+      case 'low':
+        priorityColor = theme.colorScheme.secondary;
+        break;
+      default:
+        priorityColor = theme.colorScheme.primary;
+    }
+
+    final formattedTime = '${task.scheduleTime.hour.toString().padLeft(2, '0')}:${task.scheduleTime.minute.toString().padLeft(2, '0')}';
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Row(
+          children: [
+            Checkbox(
+              value: task.isCompleted,
+              onChanged: (val) async {
+                await ref.read(taskListProvider.notifier).toggleTask(task.id);
+              },
+              activeColor: theme.colorScheme.primary,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    task.title,
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontSize: 14,
+                      decoration: task.isCompleted ? TextDecoration.lineThrough : null,
+                      color: task.isCompleted ? theme.textTheme.bodyMedium?.color?.withOpacity(0.5) : null,
+                    ),
+                  ),
+                  if (task.description != null) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      task.description!,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontSize: 12,
+                        color: theme.textTheme.bodyMedium?.color?.withOpacity(0.7),
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      Icon(Icons.access_time, size: 12, color: theme.textTheme.bodyMedium?.color),
+                      const SizedBox(width: 4),
+                      Text(formattedTime, style: theme.textTheme.bodyMedium?.copyWith(fontSize: 11)),
+                      const SizedBox(width: 12),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: priorityColor.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          task.priority,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            fontSize: 10,
+                            color: priorityColor,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -155,72 +411,6 @@ class PlannerView extends StatelessWidget {
             ),
           );
         }).toList(),
-      ),
-    );
-  }
-
-  Widget _buildTaskItem(
-    BuildContext context, {
-    required String title,
-    required String time,
-    required String priority,
-    required Color priorityColor,
-    required bool isCompleted,
-  }) {
-    final theme = Theme.of(context);
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Row(
-          children: [
-            Checkbox(
-              value: isCompleted,
-              onChanged: (val) {},
-              activeColor: theme.colorScheme.primary,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      fontSize: 14,
-                      decoration: isCompleted ? TextDecoration.lineThrough : null,
-                      color: isCompleted ? theme.textTheme.bodyMedium?.color?.withOpacity(0.5) : null,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Row(
-                    children: [
-                      Icon(Icons.access_time, size: 12, color: theme.textTheme.bodyMedium?.color),
-                      const SizedBox(width: 4),
-                      Text(time, style: theme.textTheme.bodyMedium?.copyWith(fontSize: 11)),
-                      const SizedBox(width: 12),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: priorityColor.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Text(
-                          priority,
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            fontSize: 10,
-                            color: priorityColor,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
