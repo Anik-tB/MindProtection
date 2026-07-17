@@ -6,7 +6,9 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/ui/liquid_glass.dart';
+import '../../../blocking/data/services/android_blocking_service.dart';
 import '../../../focus/presentation/viewmodels/focus_timer_notifier.dart';
+import '../viewmodels/screen_time_provider.dart';
 
 class AnalyticsView extends ConsumerWidget {
   const AnalyticsView({super.key});
@@ -47,6 +49,8 @@ class AnalyticsView extends ConsumerWidget {
           _InsightsHeader(minutes: minutes),
           const SizedBox(height: 14),
           _BarChartCard(minutes: minutes, weekdays: weekdays),
+          const SizedBox(height: 14),
+          const _ScreenTimeCard(),
           const SizedBox(height: 14),
           const _LineChartCard(),
           const SizedBox(height: 14),
@@ -608,6 +612,386 @@ class _SoftDivider extends StatelessWidget {
       height: 42,
       margin: const EdgeInsets.symmetric(horizontal: 10),
       color: AppTheme.border,
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────
+// Screen Time Card
+// ─────────────────────────────────────────────────────
+
+class _ScreenTimeCard extends ConsumerStatefulWidget {
+  const _ScreenTimeCard();
+
+  @override
+  ConsumerState<_ScreenTimeCard> createState() => _ScreenTimeCardState();
+}
+
+class _ScreenTimeCardState extends ConsumerState<_ScreenTimeCard> {
+  bool _expanded = false;
+
+  // Social/entertainment apps that get highlighted as high-risk
+  static const _highRiskPackages = {
+    'com.instagram.android',
+    'com.zhiliaoapp.musically', // TikTok
+    'com.ss.android.ugc.trill', // TikTok alt
+    'com.google.android.youtube',
+    'com.twitter.android',
+    'com.facebook.katana',
+    'com.snapchat.android',
+    'com.facebook.orca', // Messenger
+    'com.reddit.frontpage',
+    'com.pinterest',
+    'com.linkedin.android',
+  };
+
+  bool _isHighRisk(String packageName) =>
+      _highRiskPackages.any((pkg) => packageName.contains(pkg.split('.').last));
+
+  Color _avatarColor(String packageName) {
+    final colors = [
+      const Color(0xFF00F5A0),
+      const Color(0xFF00D4FF),
+      const Color(0xFFFFB800),
+      const Color(0xFFFF3366),
+      const Color(0xFF8A2BE2),
+      const Color(0xFF00CEC9),
+      const Color(0xFFFF7675),
+      const Color(0xFFA29BFE),
+    ];
+    final hash = packageName.codeUnits.fold(0, (prev, el) => prev + el);
+    return colors[hash % colors.length];
+  }
+
+  String _formatTime(int minutes) {
+    if (minutes >= 60) {
+      final h = minutes ~/ 60;
+      final m = minutes % 60;
+      return m > 0 ? '${h}h ${m}m' : '${h}h';
+    }
+    return '${minutes}m';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final screenTimeAsync = ref.watch(screenTimeProvider);
+
+    return LiquidGlassPanel(
+      padding: const EdgeInsets.all(18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const LiquidIconBadge(
+                icon: Icons.phone_android_rounded,
+                color: AppTheme.info,
+                size: 36,
+                iconSize: 18,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Today\'s Screen Time',
+                      style: GoogleFonts.outfit(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: AppTheme.textPrimary,
+                      ),
+                    ),
+                    screenTimeAsync.when(
+                      data: (entries) {
+                        final total = entries.fold<int>(0, (s, e) => s + e.usageMinutes);
+                        return Text(
+                          _formatTime(total),
+                          style: GoogleFonts.outfit(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: AppTheme.textSecondary,
+                          ),
+                        );
+                      },
+                      loading: () => Text('Loading...', style: GoogleFonts.inter(fontSize: 12, color: AppTheme.textHint)),
+                      error: (_, e) => Text('Tap to grant access', style: GoogleFonts.inter(fontSize: 12, color: AppTheme.warning)),
+                    ),
+                  ],
+                ),
+              ),
+              GestureDetector(
+                onTap: () {
+                  HapticFeedback.lightImpact();
+                  ref.invalidate(screenTimeProvider);
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppTheme.info.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(Icons.refresh_rounded, size: 16, color: AppTheme.info),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          screenTimeAsync.when(
+            data: (entries) {
+              if (entries.isEmpty) {
+                return _PermissionPromptContent();
+              }
+              final maxMinutes = entries.first.usageMinutes.toDouble();
+              final displayedEntries = _expanded ? entries : entries.take(6).toList();
+
+              return Column(
+                children: [
+                  ...List.generate(displayedEntries.length, (i) {
+                    final entry = displayedEntries[i];
+                    final frac = maxMinutes > 0 ? entry.usageMinutes / maxMinutes : 0.0;
+                    final isRisk = _isHighRisk(entry.packageName);
+                    final avatarColor = _avatarColor(entry.packageName);
+                    final initial = entry.appName.isNotEmpty ? entry.appName[0].toUpperCase() : '?';
+
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: Row(
+                        children: [
+                          // App avatar
+                          Container(
+                            width: 36,
+                            height: 36,
+                            decoration: BoxDecoration(
+                              color: avatarColor.withValues(alpha: 0.18),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                color: avatarColor.withValues(alpha: 0.35),
+                                width: 1,
+                              ),
+                            ),
+                            child: Center(
+                              child: Text(
+                                initial,
+                                style: GoogleFonts.outfit(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w800,
+                                  color: avatarColor,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        entry.appName,
+                                        style: GoogleFonts.inter(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w600,
+                                          color: AppTheme.textPrimary,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      _formatTime(entry.usageMinutes),
+                                      style: GoogleFonts.outfit(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w700,
+                                        color: isRisk ? AppTheme.error : AppTheme.textSecondary,
+                                      ),
+                                    ),
+                                    if (isRisk) ...
+                                    [
+                                      const SizedBox(width: 5),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                        decoration: BoxDecoration(
+                                          color: AppTheme.error.withValues(alpha: 0.14),
+                                          borderRadius: BorderRadius.circular(6),
+                                          border: Border.all(color: AppTheme.error.withValues(alpha: 0.3), width: 0.8),
+                                        ),
+                                        child: Text(
+                                          'High',
+                                          style: GoogleFonts.inter(
+                                            fontSize: 9,
+                                            fontWeight: FontWeight.w800,
+                                            color: AppTheme.error,
+                                            letterSpacing: 0.3,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                                const SizedBox(height: 5),
+                                // Animated usage bar
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(4),
+                                  child: SizedBox(
+                                    height: 5,
+                                    child: TweenAnimationBuilder<double>(
+                                      tween: Tween(begin: 0.0, end: frac),
+                                      duration: Duration(milliseconds: 600 + (i * 80)),
+                                      curve: Curves.easeOutCubic,
+                                      builder: (context, value, _) {
+                                        return LinearProgressIndicator(
+                                          value: value,
+                                          backgroundColor: AppTheme.border,
+                                          valueColor: AlwaysStoppedAnimation<Color>(
+                                            isRisk ? AppTheme.error : avatarColor,
+                                          ),
+                                          minHeight: 5,
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }),
+                  if (entries.length > 6)
+                    GestureDetector(
+                      onTap: () {
+                        HapticFeedback.lightImpact();
+                        setState(() => _expanded = !_expanded);
+                      },
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        decoration: BoxDecoration(
+                          color: AppTheme.primary.withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: AppTheme.borderAccent, width: 0.8),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              _expanded ? 'Show less' : 'Show ${entries.length - 6} more apps',
+                              style: GoogleFonts.inter(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                color: AppTheme.primary,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            Icon(
+                              _expanded ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded,
+                              size: 16,
+                              color: AppTheme.primary,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            },
+            loading: () => Column(
+              children: List.generate(
+                4,
+                (i) => Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 36, height: 36,
+                        decoration: BoxDecoration(
+                          color: AppTheme.surfaceRaised,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(width: 100, height: 10, decoration: BoxDecoration(color: AppTheme.surfaceRaised, borderRadius: BorderRadius.circular(5))),
+                            const SizedBox(height: 6),
+                            Container(width: double.infinity, height: 5, decoration: BoxDecoration(color: AppTheme.surfaceRaised, borderRadius: BorderRadius.circular(3))),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            error: (_, e) => const _PermissionPromptContent(),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PermissionPromptContent extends StatelessWidget {
+  const _PermissionPromptContent();
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppTheme.warning.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: AppTheme.warning.withValues(alpha: 0.25), width: 1),
+          ),
+          child: Row(
+            children: [
+              const Icon(Icons.info_outline_rounded, color: AppTheme.warning, size: 20),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  'Usage Stats permission required to show real screen time data.',
+                  style: GoogleFonts.inter(fontSize: 12, color: AppTheme.textSecondary, height: 1.45),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+        GestureDetector(
+          onTap: () {
+            HapticFeedback.mediumImpact();
+            AndroidBlockingService.requestUsageStatsPermission();
+          },
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            decoration: BoxDecoration(
+              gradient: AppTheme.primaryGradient,
+              borderRadius: BorderRadius.circular(14),
+              boxShadow: AppTheme.primaryGlow,
+            ),
+            child: Center(
+              child: Text(
+                'Grant Usage Access',
+                style: GoogleFonts.outfit(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: AppTheme.onPrimary,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
