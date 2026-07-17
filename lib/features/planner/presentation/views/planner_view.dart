@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_theme.dart';
@@ -56,7 +57,41 @@ class _PlannerViewState extends ConsumerState<PlannerView>
                     title: 'Add task',
                     subtitle: 'Attach this task to the selected day.',
                   ),
-                  const SizedBox(height: 18),
+                  const SizedBox(height: 14),
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        _QuickPill(
+                          label: '🧠 60m Deep Work Block',
+                          onTap: () {
+                            titleController.text = 'Deep Work Focus Block';
+                            descController.text = 'Unbroken 60m focus on priority task.';
+                            HapticFeedback.lightImpact();
+                          },
+                        ),
+                        const SizedBox(width: 8),
+                        _QuickPill(
+                          label: '📵 Digital Detox Evening',
+                          onTap: () {
+                            titleController.text = 'Digital Detox Evening';
+                            descController.text = 'Put phone in lockbox at 9:00 PM.';
+                            HapticFeedback.lightImpact();
+                          },
+                        ),
+                        const SizedBox(width: 8),
+                        _QuickPill(
+                          label: '📝 Weekly Review',
+                          onTap: () {
+                            titleController.text = 'Weekly Goal Review';
+                            descController.text = 'Review streaks and plan upcoming anchors.';
+                            HapticFeedback.lightImpact();
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 14),
                   TextField(
                     controller: titleController,
                     decoration: const InputDecoration(
@@ -145,7 +180,44 @@ class _PlannerViewState extends ConsumerState<PlannerView>
                     title: 'Add routine',
                     subtitle: 'Create a repeatable part of your day.',
                   ),
-                  const SizedBox(height: 18),
+                  const SizedBox(height: 14),
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        _QuickPill(
+                          label: '🌅 Sunlight 15m',
+                          onTap: () {
+                            titleController.text = 'Outdoor Sunlight & Stretch';
+                            selectedTimeOfDay = 'Morning';
+                            setModalState(() {});
+                            HapticFeedback.lightImpact();
+                          },
+                        ),
+                        const SizedBox(width: 8),
+                        _QuickPill(
+                          label: '📚 25m Pomodoro Study',
+                          onTap: () {
+                            titleController.text = '25m Focused Study Session';
+                            selectedTimeOfDay = 'Study';
+                            setModalState(() {});
+                            HapticFeedback.lightImpact();
+                          },
+                        ),
+                        const SizedBox(width: 8),
+                        _QuickPill(
+                          label: '📵 Phone outside bedroom',
+                          onTap: () {
+                            titleController.text = 'Charge phone outside bedroom';
+                            selectedTimeOfDay = 'Night';
+                            setModalState(() {});
+                            HapticFeedback.lightImpact();
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 14),
                   TextField(
                     controller: titleController,
                     decoration: const InputDecoration(
@@ -482,7 +554,21 @@ class _TaskCard extends ConsumerWidget {
           children: [
             Checkbox(
               value: task.isCompleted,
-              onChanged: (_) => ref.read(taskListProvider.notifier).toggleTask(task.id),
+              onChanged: (_) async {
+                HapticFeedback.mediumImpact();
+                final completed = await ref.read(taskListProvider.notifier).toggleTask(task.id);
+                if (completed && context.mounted) {
+                  HapticFeedback.heavyImpact();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: const Text('Task completed! +20 XP & +5 Coins earned!'),
+                      backgroundColor: AppTheme.primary.withValues(alpha: 0.9),
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                  );
+                }
+              },
             ),
             const SizedBox(width: 8),
             Expanded(
@@ -627,8 +713,20 @@ class _RoutineCategory extends ConsumerWidget {
                 return FilterChip(
                   label: Text(item.title),
                   selected: item.isCompleted,
-                  onSelected: (_) =>
-                      ref.read(routineListProvider.notifier).toggleRoutine(item.id),
+                  onSelected: (_) {
+                    HapticFeedback.lightImpact();
+                    ref.read(routineListProvider.notifier).toggleRoutine(item.id);
+                    if (!item.isCompleted && context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: const Text('Routine anchor completed! +10 XP & +2 Coins!'),
+                          backgroundColor: color.withValues(alpha: 0.9),
+                          behavior: SnackBarBehavior.floating,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                      );
+                    }
+                  },
                   selectedColor: color.withValues(alpha: 0.16),
                   checkmarkColor: color,
                   side: BorderSide(color: color.withValues(alpha: 0.24)),
@@ -709,7 +807,21 @@ class _GoalCard extends ConsumerWidget {
         children: [
           Checkbox(
             value: goal.isCompleted,
-            onChanged: (_) => ref.read(goalListProvider.notifier).toggleGoal(goal.id),
+            onChanged: (_) {
+              HapticFeedback.mediumImpact();
+              ref.read(goalListProvider.notifier).toggleGoal(goal.id);
+              if (!goal.isCompleted && context.mounted) {
+                HapticFeedback.heavyImpact();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Goal achieved! +${goal.isLongTerm ? 100 : 30} XP & +${goal.isLongTerm ? 50 : 10} Coins!'),
+                    backgroundColor: color.withValues(alpha: 0.9),
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                );
+              }
+            },
           ),
           const SizedBox(width: 8),
           Expanded(
@@ -822,6 +934,40 @@ class _SheetTitle extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _QuickPill extends StatelessWidget {
+  final String label;
+  final VoidCallback onTap;
+
+  const _QuickPill({required this.label, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+          decoration: BoxDecoration(
+            color: AppTheme.primary.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: AppTheme.primary.withValues(alpha: 0.3)),
+          ),
+          child: Text(
+            label,
+            style: const TextStyle(
+              color: AppTheme.primaryLight,
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
