@@ -17,33 +17,38 @@ const GamificationModelSchema = CollectionSchema(
   name: r'GamificationModel',
   id: -313084432418505910,
   properties: {
-    r'coins': PropertySchema(
+    r'claimedAchievementIds': PropertySchema(
       id: 0,
+      name: r'claimedAchievementIds',
+      type: IsarType.stringList,
+    ),
+    r'coins': PropertySchema(
+      id: 1,
       name: r'coins',
       type: IsarType.long,
     ),
     r'focusStreak': PropertySchema(
-      id: 1,
+      id: 2,
       name: r'focusStreak',
       type: IsarType.long,
     ),
     r'habitStreak': PropertySchema(
-      id: 2,
+      id: 3,
       name: r'habitStreak',
       type: IsarType.long,
     ),
     r'lastCheckInDate': PropertySchema(
-      id: 3,
+      id: 4,
       name: r'lastCheckInDate',
       type: IsarType.dateTime,
     ),
     r'level': PropertySchema(
-      id: 4,
+      id: 5,
       name: r'level',
       type: IsarType.long,
     ),
     r'xp': PropertySchema(
-      id: 5,
+      id: 6,
       name: r'xp',
       type: IsarType.long,
     )
@@ -68,6 +73,18 @@ int _gamificationModelEstimateSize(
   Map<Type, List<int>> allOffsets,
 ) {
   var bytesCount = offsets.last;
+  {
+    final list = object.claimedAchievementIds;
+    if (list != null) {
+      bytesCount += 3 + list.length * 3;
+      {
+        for (var i = 0; i < list.length; i++) {
+          final value = list[i];
+          bytesCount += value.length * 3;
+        }
+      }
+    }
+  }
   return bytesCount;
 }
 
@@ -77,12 +94,13 @@ void _gamificationModelSerialize(
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
-  writer.writeLong(offsets[0], object.coins);
-  writer.writeLong(offsets[1], object.focusStreak);
-  writer.writeLong(offsets[2], object.habitStreak);
-  writer.writeDateTime(offsets[3], object.lastCheckInDate);
-  writer.writeLong(offsets[4], object.level);
-  writer.writeLong(offsets[5], object.xp);
+  writer.writeStringList(offsets[0], object.claimedAchievementIds);
+  writer.writeLong(offsets[1], object.coins);
+  writer.writeLong(offsets[2], object.focusStreak);
+  writer.writeLong(offsets[3], object.habitStreak);
+  writer.writeDateTime(offsets[4], object.lastCheckInDate);
+  writer.writeLong(offsets[5], object.level);
+  writer.writeLong(offsets[6], object.xp);
 }
 
 GamificationModel _gamificationModelDeserialize(
@@ -92,13 +110,14 @@ GamificationModel _gamificationModelDeserialize(
   Map<Type, List<int>> allOffsets,
 ) {
   final object = GamificationModel();
-  object.coins = reader.readLong(offsets[0]);
-  object.focusStreak = reader.readLong(offsets[1]);
-  object.habitStreak = reader.readLong(offsets[2]);
+  object.claimedAchievementIds = reader.readStringList(offsets[0]);
+  object.coins = reader.readLong(offsets[1]);
+  object.focusStreak = reader.readLong(offsets[2]);
+  object.habitStreak = reader.readLong(offsets[3]);
   object.id = id;
-  object.lastCheckInDate = reader.readDateTimeOrNull(offsets[3]);
-  object.level = reader.readLong(offsets[4]);
-  object.xp = reader.readLong(offsets[5]);
+  object.lastCheckInDate = reader.readDateTimeOrNull(offsets[4]);
+  object.level = reader.readLong(offsets[5]);
+  object.xp = reader.readLong(offsets[6]);
   return object;
 }
 
@@ -110,16 +129,18 @@ P _gamificationModelDeserializeProp<P>(
 ) {
   switch (propertyId) {
     case 0:
-      return (reader.readLong(offset)) as P;
+      return (reader.readStringList(offset)) as P;
     case 1:
       return (reader.readLong(offset)) as P;
     case 2:
       return (reader.readLong(offset)) as P;
     case 3:
-      return (reader.readDateTimeOrNull(offset)) as P;
-    case 4:
       return (reader.readLong(offset)) as P;
+    case 4:
+      return (reader.readDateTimeOrNull(offset)) as P;
     case 5:
+      return (reader.readLong(offset)) as P;
+    case 6:
       return (reader.readLong(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -222,6 +243,251 @@ extension GamificationModelQueryWhere
 
 extension GamificationModelQueryFilter
     on QueryBuilder<GamificationModel, GamificationModel, QFilterCondition> {
+  QueryBuilder<GamificationModel, GamificationModel, QAfterFilterCondition>
+      claimedAchievementIdsIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'claimedAchievementIds',
+      ));
+    });
+  }
+
+  QueryBuilder<GamificationModel, GamificationModel, QAfterFilterCondition>
+      claimedAchievementIdsIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'claimedAchievementIds',
+      ));
+    });
+  }
+
+  QueryBuilder<GamificationModel, GamificationModel, QAfterFilterCondition>
+      claimedAchievementIdsElementEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'claimedAchievementIds',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<GamificationModel, GamificationModel, QAfterFilterCondition>
+      claimedAchievementIdsElementGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'claimedAchievementIds',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<GamificationModel, GamificationModel, QAfterFilterCondition>
+      claimedAchievementIdsElementLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'claimedAchievementIds',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<GamificationModel, GamificationModel, QAfterFilterCondition>
+      claimedAchievementIdsElementBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'claimedAchievementIds',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<GamificationModel, GamificationModel, QAfterFilterCondition>
+      claimedAchievementIdsElementStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'claimedAchievementIds',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<GamificationModel, GamificationModel, QAfterFilterCondition>
+      claimedAchievementIdsElementEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'claimedAchievementIds',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<GamificationModel, GamificationModel, QAfterFilterCondition>
+      claimedAchievementIdsElementContains(String value,
+          {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'claimedAchievementIds',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<GamificationModel, GamificationModel, QAfterFilterCondition>
+      claimedAchievementIdsElementMatches(String pattern,
+          {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'claimedAchievementIds',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<GamificationModel, GamificationModel, QAfterFilterCondition>
+      claimedAchievementIdsElementIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'claimedAchievementIds',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<GamificationModel, GamificationModel, QAfterFilterCondition>
+      claimedAchievementIdsElementIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'claimedAchievementIds',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<GamificationModel, GamificationModel, QAfterFilterCondition>
+      claimedAchievementIdsLengthEqualTo(int length) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'claimedAchievementIds',
+        length,
+        true,
+        length,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<GamificationModel, GamificationModel, QAfterFilterCondition>
+      claimedAchievementIdsIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'claimedAchievementIds',
+        0,
+        true,
+        0,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<GamificationModel, GamificationModel, QAfterFilterCondition>
+      claimedAchievementIdsIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'claimedAchievementIds',
+        0,
+        false,
+        999999,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<GamificationModel, GamificationModel, QAfterFilterCondition>
+      claimedAchievementIdsLengthLessThan(
+    int length, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'claimedAchievementIds',
+        0,
+        true,
+        length,
+        include,
+      );
+    });
+  }
+
+  QueryBuilder<GamificationModel, GamificationModel, QAfterFilterCondition>
+      claimedAchievementIdsLengthGreaterThan(
+    int length, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'claimedAchievementIds',
+        length,
+        include,
+        999999,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<GamificationModel, GamificationModel, QAfterFilterCondition>
+      claimedAchievementIdsLengthBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'claimedAchievementIds',
+        lower,
+        includeLower,
+        upper,
+        includeUpper,
+      );
+    });
+  }
+
   QueryBuilder<GamificationModel, GamificationModel, QAfterFilterCondition>
       coinsEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
@@ -827,6 +1093,13 @@ extension GamificationModelQuerySortThenBy
 extension GamificationModelQueryWhereDistinct
     on QueryBuilder<GamificationModel, GamificationModel, QDistinct> {
   QueryBuilder<GamificationModel, GamificationModel, QDistinct>
+      distinctByClaimedAchievementIds() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'claimedAchievementIds');
+    });
+  }
+
+  QueryBuilder<GamificationModel, GamificationModel, QDistinct>
       distinctByCoins() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'coins');
@@ -873,6 +1146,13 @@ extension GamificationModelQueryProperty
   QueryBuilder<GamificationModel, int, QQueryOperations> idProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'id');
+    });
+  }
+
+  QueryBuilder<GamificationModel, List<String>?, QQueryOperations>
+      claimedAchievementIdsProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'claimedAchievementIds');
     });
   }
 

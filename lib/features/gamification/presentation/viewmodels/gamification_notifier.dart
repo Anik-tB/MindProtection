@@ -12,6 +12,7 @@ class GamificationState {
   final int focusStreak;
   final int habitStreak;
   final DateTime? lastCheckInDate;
+  final List<String> claimedAchievementIds;
 
   GamificationState({
     required this.level,
@@ -20,6 +21,7 @@ class GamificationState {
     required this.focusStreak,
     required this.habitStreak,
     this.lastCheckInDate,
+    this.claimedAchievementIds = const [],
   });
 
   GamificationState copyWith({
@@ -29,6 +31,7 @@ class GamificationState {
     int? focusStreak,
     int? habitStreak,
     DateTime? lastCheckInDate,
+    List<String>? claimedAchievementIds,
   }) {
     return GamificationState(
       level: level ?? this.level,
@@ -37,6 +40,7 @@ class GamificationState {
       focusStreak: focusStreak ?? this.focusStreak,
       habitStreak: habitStreak ?? this.habitStreak,
       lastCheckInDate: lastCheckInDate ?? this.lastCheckInDate,
+      claimedAchievementIds: claimedAchievementIds ?? this.claimedAchievementIds,
     );
   }
 }
@@ -56,6 +60,7 @@ class Gamification extends _$Gamification {
       coins: 0,
       focusStreak: 0,
       habitStreak: 0,
+      claimedAchievementIds: const [],
     );
   }
 
@@ -69,6 +74,7 @@ class Gamification extends _$Gamification {
         focusStreak: stats.focusStreak,
         habitStreak: stats.habitStreak,
         lastCheckInDate: stats.lastCheckInDate,
+        claimedAchievementIds: stats.claimedAchievementIds ?? [],
       );
     } else {
       // Initialize if empty
@@ -79,6 +85,7 @@ class Gamification extends _$Gamification {
         focusStreak: 0,
         habitStreak: 0,
         lastCheckInDate: null,
+        claimedAchievementIds: [],
       );
     }
   }
@@ -90,6 +97,7 @@ class Gamification extends _$Gamification {
     required int focusStreak,
     required int habitStreak,
     DateTime? lastCheckInDate,
+    List<String>? claimedAchievementIds,
   }) async {
     final model = GamificationModel()
       ..id = 1
@@ -98,7 +106,8 @@ class Gamification extends _$Gamification {
       ..coins = coins
       ..focusStreak = focusStreak
       ..habitStreak = habitStreak
-      ..lastCheckInDate = lastCheckInDate ?? state.lastCheckInDate;
+      ..lastCheckInDate = lastCheckInDate ?? state.lastCheckInDate
+      ..claimedAchievementIds = claimedAchievementIds ?? state.claimedAchievementIds;
 
     await _isar.writeTxn(() async {
       await _isar.gamificationModels.put(model);
@@ -247,5 +256,43 @@ class Gamification extends _$Gamification {
       habitStreak: state.habitStreak,
       lastCheckInDate: state.lastCheckInDate,
     );
+  }
+
+  Future<bool> claimAchievementReward(String badgeId, int xpReward, int coinReward) async {
+    if (state.claimedAchievementIds.contains(badgeId)) {
+      return false;
+    }
+
+    final updatedClaimed = List<String>.from(state.claimedAchievementIds)..add(badgeId);
+    
+    int newXp = state.xp + xpReward;
+    int newLevel = state.level;
+    int newCoins = state.coins + coinReward;
+    int xpNeeded = newLevel * 100;
+
+    while (newXp >= xpNeeded) {
+      newXp -= xpNeeded;
+      newLevel += 1;
+      newCoins += newLevel * 20;
+      xpNeeded = newLevel * 100;
+    }
+
+    state = state.copyWith(
+      xp: newXp,
+      level: newLevel,
+      coins: newCoins,
+      claimedAchievementIds: updatedClaimed,
+    );
+
+    await _saveState(
+      level: state.level,
+      xp: state.xp,
+      coins: state.coins,
+      focusStreak: state.focusStreak,
+      habitStreak: state.habitStreak,
+      lastCheckInDate: state.lastCheckInDate,
+      claimedAchievementIds: state.claimedAchievementIds,
+    );
+    return true;
   }
 }

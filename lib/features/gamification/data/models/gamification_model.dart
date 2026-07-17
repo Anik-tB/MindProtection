@@ -17,4 +17,6 @@ class GamificationModel {
   late int habitStreak;
 
   DateTime? lastCheckInDate;
+
+  List<String>? claimedAchievementIds;
 }
