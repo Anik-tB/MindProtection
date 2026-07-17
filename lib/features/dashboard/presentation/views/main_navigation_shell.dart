@@ -88,27 +88,83 @@ class _GlassNavigationDock extends StatelessWidget {
     return SafeArea(
       top: false,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(28),
           child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 22, sigmaY: 22),
+            filter: ImageFilter.blur(sigmaX: 26, sigmaY: 26),
             child: Container(
-              height: 72,
+              height: 74,
               decoration: BoxDecoration(
-                color: AppTheme.surfaceRaised.withValues(alpha: 0.78),
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: AppTheme.glassStroke, width: 1.2),
-                boxShadow: AppTheme.navShadow,
+                color: Colors.black.withValues(alpha: 0.55),
+                borderRadius: BorderRadius.circular(28),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.08),
+                  width: 1.0,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.4),
+                    blurRadius: 24,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
               ),
-              child: Row(
-                children: List.generate(items.length, (index) {
-                  return _NavButton(
-                    item: items[index],
-                    isActive: selectedIndex == index,
-                    onTap: () => onTap(index),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final double totalWidth = constraints.maxWidth;
+                  final double itemWidth = totalWidth / items.length;
+
+                  return Stack(
+                    children: [
+                      // Smooth sliding ambient glowing indicator
+                      AnimatedPositioned(
+                        duration: const Duration(milliseconds: 320),
+                        curve: Curves.easeOutCubic,
+                        left: selectedIndex * itemWidth + 6,
+                        top: 6,
+                        bottom: 6,
+                        width: itemWidth - 12,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                AppTheme.primary.withValues(alpha: 0.18),
+                                AppTheme.secondary.withValues(alpha: 0.1),
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(22),
+                            border: Border.all(
+                              color: AppTheme.primary.withValues(alpha: 0.32),
+                              width: 1.2,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppTheme.primary.withValues(alpha: 0.2),
+                                blurRadius: 14,
+                                spreadRadius: -2,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      // Interactive Buttons
+                      Row(
+                        children: List.generate(items.length, (index) {
+                          return Expanded(
+                            child: _NavButton(
+                              item: items[index],
+                              isActive: selectedIndex == index,
+                              onTap: () => onTap(index),
+                            ),
+                          );
+                        }),
+                      ),
+                    ],
                   );
-                }),
+                },
               ),
             ),
           ),
@@ -141,11 +197,11 @@ class _NavButtonState extends State<_NavButton> with SingleTickerProviderStateMi
   void initState() {
     super.initState();
     _controller = AnimationController(
-      duration: const Duration(milliseconds: 160),
+      duration: const Duration(milliseconds: 140),
       vsync: this,
     );
-    _scaleAnim = Tween<double>(begin: 1.0, end: 0.94).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOutQuart),
+    _scaleAnim = Tween<double>(begin: 1.0, end: 0.9).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
     );
   }
 
@@ -157,60 +213,52 @@ class _NavButtonState extends State<_NavButton> with SingleTickerProviderStateMi
 
   @override
   Widget build(BuildContext context) {
-    final color = widget.isActive ? AppTheme.primary : AppTheme.textHint;
+    final activeColor = AppTheme.primary;
+    final inactiveColor = AppTheme.textSecondary.withValues(alpha: 0.55);
 
-    return Expanded(
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTapDown: (_) {
-          HapticFeedback.lightImpact();
-          _controller.forward();
-        },
-        onTapUp: (_) {
-          HapticFeedback.mediumImpact();
-          _controller.reverse();
-          widget.onTap();
-        },
-        onTapCancel: () => _controller.reverse(),
-        child: ScaleTransition(
-          scale: _scaleAnim,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 320),
-                curve: Curves.easeOutQuart,
-                width: 42,
-                height: 34,
-                decoration: BoxDecoration(
-                  gradient: widget.isActive ? AppTheme.primaryGradient : null,
-                  color: widget.isActive ? null : Colors.transparent,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: widget.isActive ? AppTheme.primaryGlow : null,
-                ),
-                child: Icon(
-                  widget.isActive ? widget.item.activeIcon : widget.item.icon,
-                  size: 21,
-                  color: widget.isActive ? AppTheme.onPrimary : color,
-                ),
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTapDown: (_) {
+        HapticFeedback.lightImpact();
+        _controller.forward();
+      },
+      onTapUp: (_) {
+        HapticFeedback.mediumImpact();
+        _controller.reverse();
+        widget.onTap();
+      },
+      onTapCancel: () => _controller.reverse(),
+      child: ScaleTransition(
+        scale: _scaleAnim,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            AnimatedScale(
+              scale: widget.isActive ? 1.15 : 1.0,
+              duration: const Duration(milliseconds: 240),
+              curve: Curves.easeOutBack,
+              child: Icon(
+                widget.isActive ? widget.item.activeIcon : widget.item.icon,
+                size: 23,
+                color: widget.isActive ? activeColor : inactiveColor,
               ),
-              const SizedBox(height: 4),
-              AnimatedDefaultTextStyle(
-                duration: const Duration(milliseconds: 180),
-                style: TextStyle(
-                  color: color,
-                  fontSize: 10,
-                  fontWeight: widget.isActive ? FontWeight.w800 : FontWeight.w600,
-                  letterSpacing: 0,
-                ),
-                child: Text(
-                  widget.item.label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
+            ),
+            const SizedBox(height: 5),
+            AnimatedDefaultTextStyle(
+              duration: const Duration(milliseconds: 180),
+              style: TextStyle(
+                color: widget.isActive ? AppTheme.textPrimary : inactiveColor,
+                fontSize: 10,
+                fontWeight: widget.isActive ? FontWeight.w800 : FontWeight.w600,
+                letterSpacing: -0.1,
               ),
-            ],
-          ),
+              child: Text(
+                widget.item.label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
         ),
       ),
     );
