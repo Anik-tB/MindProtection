@@ -35,9 +35,9 @@ class TaskRepositoryImpl implements TaskRepository {
   }
 
   @override
-  Future<void> toggleTask(int id) async {
+  Future<bool> toggleTask(int id) async {
     final task = await _isar.taskModels.get(id);
-    if (task == null) return;
+    if (task == null) return false;
 
     task.isCompleted = !task.isCompleted;
 
@@ -48,6 +48,7 @@ class TaskRepositoryImpl implements TaskRepository {
 
     // 2. Sync change to cloud
     await _syncTaskToCloud(task);
+    return task.isCompleted;
   }
 
   @override

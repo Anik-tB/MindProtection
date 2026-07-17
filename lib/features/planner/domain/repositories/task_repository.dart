@@ -11,7 +11,7 @@ abstract class TaskRepository {
   Future<void> addTask(TaskModel task);
 
   // Toggle completion of a task
-  Future<void> toggleTask(int id);
+  Future<bool> toggleTask(int id);
 
   // Delete a task
   Future<void> deleteTask(int id);

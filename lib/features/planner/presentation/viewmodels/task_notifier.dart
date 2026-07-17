@@ -2,6 +2,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../data/models/task_model.dart';
 import '../../data/repositories/task_repository_impl.dart';
 import '../../domain/repositories/task_repository.dart';
+import '../../../gamification/presentation/viewmodels/gamification_notifier.dart';
 
 part 'task_notifier.g.dart';
 
@@ -36,8 +37,14 @@ class TaskList extends _$TaskList {
     await _repository.addTask(task);
   }
 
-  Future<void> toggleTask(int id) async {
-    await _repository.toggleTask(id);
+  Future<bool> toggleTask(int id) async {
+    final isCompleted = await _repository.toggleTask(id);
+    if (isCompleted) {
+      final gamificationNotifier = ref.read(gamificationProvider.notifier);
+      await gamificationNotifier.addXp(20); // +20 XP for finishing a task
+      await gamificationNotifier.addCoins(5); // +5 Coins
+    }
+    return isCompleted;
   }
 
   Future<void> deleteTask(int id) async {
