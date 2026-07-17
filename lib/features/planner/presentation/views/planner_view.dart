@@ -1,7 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../viewmodels/task_notifier.dart';
+
+import '../../../../core/theme/app_theme.dart';
+import '../../../../core/ui/liquid_glass.dart';
+import '../../data/models/goal_model.dart';
+import '../../data/models/routine_model.dart';
 import '../../data/models/task_model.dart';
+import '../viewmodels/goal_notifier.dart';
+import '../viewmodels/routine_notifier.dart';
+import '../viewmodels/task_notifier.dart';
+
+final selectedDateProvider = StateProvider<DateTime>((ref) => DateTime.now());
 
 class PlannerView extends ConsumerStatefulWidget {
   const PlannerView({super.key});
@@ -10,122 +19,251 @@ class PlannerView extends ConsumerStatefulWidget {
   ConsumerState<PlannerView> createState() => _PlannerViewState();
 }
 
-class _PlannerViewState extends ConsumerState<PlannerView> {
-  // Show Bottom Sheet to Add Task
+class _PlannerViewState extends ConsumerState<PlannerView>
+    with SingleTickerProviderStateMixin {
+  late final TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 3, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
   void _showAddTaskSheet(BuildContext context) {
-    final theme = Theme.of(context);
     final titleController = TextEditingController();
     final descController = TextEditingController();
-    String selectedPriority = 'Medium';
+    var selectedPriority = 'Medium';
 
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: theme.colorScheme.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setModalState) {
-            return Padding(
-              padding: EdgeInsets.only(
-                bottom: MediaQuery.of(context).viewInsets.bottom + 24,
-                top: 24,
-                left: 24,
-                right: 24,
-              ),
+            return _SheetFrame(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text(
-                    'Add New Task',
-                    style: theme.textTheme.titleLarge?.copyWith(fontSize: 20),
+                  const _SheetTitle(
+                    icon: Icons.add_task_rounded,
+                    title: 'Add task',
+                    subtitle: 'Attach this task to the selected day.',
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 18),
                   TextField(
                     controller: titleController,
-                    decoration: InputDecoration(
-                      labelText: 'Task Title',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
+                    decoration: const InputDecoration(
+                      labelText: 'Task title',
+                      prefixIcon: Icon(Icons.task_alt_rounded),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  TextField(
+                    controller: descController,
+                    decoration: const InputDecoration(
+                      labelText: 'Description',
+                      prefixIcon: Icon(Icons.notes_rounded),
                     ),
                   ),
                   const SizedBox(height: 16),
-                  TextField(
-                    controller: descController,
-                    decoration: InputDecoration(
-                      labelText: 'Description (Optional)',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
+                  Wrap(
+                    spacing: 8,
+                    children: ['Low', 'Medium', 'High'].map((priority) {
+                      final isSelected = selectedPriority == priority;
+                      return ChoiceChip(
+                        label: Text(priority),
+                        selected: isSelected,
+                        onSelected: (_) => setModalState(() {
+                          selectedPriority = priority;
+                        }),
+                      );
+                    }).toList(),
                   ),
-                  const SizedBox(height: 20),
-
-                  // Priority Select
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text('Priority Level:', style: theme.textTheme.bodyLarge),
-                      Row(
-                        children: ['Low', 'Medium', 'High'].map((priority) {
-                          final isSelected = selectedPriority == priority;
-                          return Padding(
-                            padding: const EdgeInsets.only(left: 8.0),
-                            child: ChoiceChip(
-                              label: Text(priority),
-                              selected: isSelected,
-                              onSelected: (selected) {
-                                if (selected) {
-                                  setModalState(() {
-                                    selectedPriority = priority;
-                                  });
-                                }
-                              },
-                            ),
-                          );
-                        }).toList(),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Save Button
-                  ElevatedButton(
+                  const SizedBox(height: 22),
+                  GradientActionButton(
+                    label: 'Save task',
+                    icon: Icons.check_rounded,
                     onPressed: () async {
                       final title = titleController.text.trim();
                       if (title.isEmpty) return;
 
-                      await ref
-                          .read(taskListProvider.notifier)
-                          .addTask(
+                      final selectedDay = ref.read(selectedDateProvider);
+                      final now = DateTime.now();
+                      final scheduleTime = DateTime(
+                        selectedDay.year,
+                        selectedDay.month,
+                        selectedDay.day,
+                        now.hour,
+                        now.minute,
+                      );
+
+                      await ref.read(taskListProvider.notifier).addTask(
                             title,
                             description: descController.text.trim().isEmpty
                                 ? null
                                 : descController.text.trim(),
-                            scheduleTime: DateTime.now(),
+                            scheduleTime: scheduleTime,
                             priority: selectedPriority,
                           );
 
-                      if (context.mounted) {
-                        Navigator.of(context).pop();
-                      }
+                      if (context.mounted) Navigator.of(context).pop();
                     },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: theme.colorScheme.primary,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showAddRoutineSheet(BuildContext context) {
+    final titleController = TextEditingController();
+    var selectedTimeOfDay = 'Morning';
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return _SheetFrame(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const _SheetTitle(
+                    icon: Icons.repeat_rounded,
+                    title: 'Add routine',
+                    subtitle: 'Create a repeatable part of your day.',
+                  ),
+                  const SizedBox(height: 18),
+                  TextField(
+                    controller: titleController,
+                    decoration: const InputDecoration(
+                      labelText: 'Routine action',
+                      prefixIcon: Icon(Icons.auto_awesome_rounded),
                     ),
-                    child: const Text(
-                      'SAVE TASK',
-                      style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 14),
+                  DropdownButtonFormField<String>(
+                    initialValue: selectedTimeOfDay,
+                    decoration: const InputDecoration(
+                      labelText: 'Time of day',
+                      prefixIcon: Icon(Icons.schedule_rounded),
                     ),
+                    items: const [
+                      DropdownMenuItem(value: 'Morning', child: Text('Morning')),
+                      DropdownMenuItem(value: 'Study', child: Text('Study session')),
+                      DropdownMenuItem(value: 'Night', child: Text('Night')),
+                    ],
+                    onChanged: (value) {
+                      if (value == null) return;
+                      setModalState(() => selectedTimeOfDay = value);
+                    },
+                  ),
+                  const SizedBox(height: 22),
+                  GradientActionButton(
+                    label: 'Save routine',
+                    icon: Icons.check_rounded,
+                    onPressed: () async {
+                      final title = titleController.text.trim();
+                      if (title.isEmpty) return;
+
+                      await ref.read(routineListProvider.notifier).addRoutine(
+                            title,
+                            selectedTimeOfDay,
+                          );
+
+                      if (context.mounted) Navigator.of(context).pop();
+                    },
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showAddGoalSheet(BuildContext context) {
+    final titleController = TextEditingController();
+    var isLongTerm = false;
+    var selectedDate = DateTime.now().add(const Duration(days: 7));
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return _SheetFrame(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const _SheetTitle(
+                    icon: Icons.track_changes_rounded,
+                    title: 'Add goal',
+                    subtitle: 'Give your week a clear target.',
+                  ),
+                  const SizedBox(height: 18),
+                  TextField(
+                    controller: titleController,
+                    decoration: const InputDecoration(
+                      labelText: 'Goal title',
+                      prefixIcon: Icon(Icons.flag_rounded),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text('Long-term goal'),
+                    subtitle: const Text('Rewards higher XP upon completion'),
+                    value: isLongTerm,
+                    onChanged: (value) => setModalState(() => isLongTerm = value),
+                  ),
+                  const SizedBox(height: 6),
+                  OutlinedButton.icon(
+                    icon: const Icon(Icons.calendar_month_rounded),
+                    label: Text(
+                      '${selectedDate.day}/${selectedDate.month}/${selectedDate.year}',
+                    ),
+                    onPressed: () async {
+                      final date = await showDatePicker(
+                        context: context,
+                        initialDate: selectedDate,
+                        firstDate: DateTime.now(),
+                        lastDate: DateTime.now().add(const Duration(days: 365)),
+                      );
+                      if (date != null) setModalState(() => selectedDate = date);
+                    },
+                  ),
+                  const SizedBox(height: 22),
+                  GradientActionButton(
+                    label: 'Save goal',
+                    icon: Icons.check_rounded,
+                    onPressed: () async {
+                      final title = titleController.text.trim();
+                      if (title.isEmpty) return;
+
+                      await ref.read(goalListProvider.notifier).addGoal(
+                            title,
+                            isLongTerm,
+                            selectedDate,
+                          );
+
+                      if (context.mounted) Navigator.of(context).pop();
+                    },
                   ),
                 ],
               ),
@@ -138,190 +276,213 @@ class _PlannerViewState extends ConsumerState<PlannerView> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final tasksAsync = ref.watch(taskListProvider);
-
     return Scaffold(
+      backgroundColor: Colors.transparent,
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header
-              Text('Planner & Routines', style: theme.textTheme.displayMedium),
-              const SizedBox(height: 4),
-              Text(
-                'Organize your day for peak discipline',
-                style: theme.textTheme.bodyMedium,
-              ),
-              const SizedBox(height: 25),
-
-              // Calendar mini-strip
-              _buildCalendarStrip(context),
-              const SizedBox(height: 25),
-
-              // Section Header: Daily Tasks
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        bottom: false,
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 14),
+              child: Column(
                 children: [
-                  Text('Daily Tasks', style: theme.textTheme.titleLarge),
-                  TextButton.icon(
-                    onPressed: () => _showAddTaskSheet(context),
-                    icon: const Icon(Icons.add, size: 18),
-                    label: const Text('Add Task'),
+                  const AppPageHeader(
+                    title: 'Planner',
+                    subtitle: 'Plan the day before distractions do.',
+                    icon: Icons.event_note_rounded,
                   ),
-                ],
-              ),
-              const SizedBox(height: 10),
-
-              // Tasks Content Area
-              tasksAsync.when(
-                data: (tasks) {
-                  if (tasks.isEmpty) {
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 20.0),
-                      child: Center(
-                        child: Column(
-                          children: [
-                            Icon(
-                              Icons.assignment_turned_in_outlined,
-                              size: 48,
-                              color: theme.textTheme.bodyMedium?.color
-                                  ?.withValues(alpha: 0.3),
-                            ),
-                            const SizedBox(height: 12),
-                            Text(
-                              'No tasks planned for today.',
-                              style: theme.textTheme.bodyMedium,
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  }
-                  return ListView.separated(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: tasks.length,
-                    separatorBuilder: (context, index) =>
-                        const SizedBox(height: 10),
-                    itemBuilder: (context, index) {
-                      final task = tasks[index];
-                      return Dismissible(
-                        key: Key('task_${task.id}'),
-                        direction: DismissDirection.endToStart,
-                        background: Container(
-                          alignment: Alignment.centerRight,
-                          padding: const EdgeInsets.only(right: 20.0),
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.error,
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: const Icon(Icons.delete, color: Colors.white),
-                        ),
-                        onDismissed: (direction) async {
-                          await ref
-                              .read(taskListProvider.notifier)
-                              .deleteTask(task.id);
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Task deleted')),
-                            );
-                          }
-                        },
-                        child: _buildTaskCard(context, task),
-                      );
-                    },
-                  );
-                },
-                loading: () => const Center(
-                  child: Padding(
-                    padding: EdgeInsets.all(20.0),
-                    child: CircularProgressIndicator(),
-                  ),
-                ),
-                error: (err, stack) => Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(20.0),
-                    child: Text(
-                      'Error loading tasks: $err',
-                      style: const TextStyle(color: Colors.red),
+                  const SizedBox(height: 18),
+                  const _CalendarStrip(),
+                  const SizedBox(height: 14),
+                  LiquidGlassPanel(
+                    padding: const EdgeInsets.all(4),
+                    radius: 18,
+                    shadows: const [],
+                    child: TabBar(
+                      controller: _tabController,
+                      indicatorSize: TabBarIndicatorSize.tab,
+                      tabs: const [
+                        Tab(text: 'Tasks'),
+                        Tab(text: 'Routines'),
+                        Tab(text: 'Goals'),
+                      ],
                     ),
                   ),
-                ),
-              ),
-              const SizedBox(height: 25),
-
-              // Section: Routines
-              Text('Habitual Routines', style: theme.textTheme.titleLarge),
-              const SizedBox(height: 15),
-              _buildRoutineCard(
-                context,
-                title: 'Morning Routine',
-                time: '06:00 AM - 07:30 AM',
-                items: [
-                  'Drink water',
-                  '15 mins stretching',
-                  'Morning Prayer',
-                  'No Phone for 1 hour',
                 ],
-                icon: Icons.wb_sunny_outlined,
-                iconColor: Colors.amber,
               ),
-              const SizedBox(height: 15),
-              _buildRoutineCard(
-                context,
-                title: 'Night Routine',
-                time: '10:00 PM - 11:00 PM',
-                items: [
-                  'Plan next day',
-                  'Review streaks',
-                  'Eye Care (20-20-20)',
-                  'Read a book',
+            ),
+            Expanded(
+              child: TabBarView(
+                controller: _tabController,
+                children: [
+                  _TasksTab(onAddTask: () => _showAddTaskSheet(context)),
+                  _RoutinesTab(onAddRoutine: () => _showAddRoutineSheet(context)),
+                  _GoalsTab(onAddGoal: () => _showAddGoalSheet(context)),
                 ],
-                icon: Icons.nights_stay_outlined,
-                iconColor: Colors.indigoAccent,
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
   }
+}
 
-  Widget _buildTaskCard(BuildContext context, TaskModel task) {
-    final theme = Theme.of(context);
+class _CalendarStrip extends ConsumerWidget {
+  const _CalendarStrip();
 
-    Color priorityColor;
-    switch (task.priority.toLowerCase()) {
-      case 'high':
-        priorityColor = theme.colorScheme.error;
-        break;
-      case 'low':
-        priorityColor = theme.colorScheme.secondary;
-        break;
-      default:
-        priorityColor = theme.colorScheme.primary;
-    }
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final selectedDate = ref.watch(selectedDateProvider);
+    final now = DateTime.now();
+    final monday = now.subtract(Duration(days: now.weekday - 1));
+    final daysOfWeek = List.generate(7, (index) => monday.add(Duration(days: index)));
+    const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
-    final formattedTime =
-        '${task.scheduleTime.hour.toString().padLeft(2, '0')}:${task.scheduleTime.minute.toString().padLeft(2, '0')}';
+    return LiquidGlassPanel(
+      padding: const EdgeInsets.all(10),
+      radius: 22,
+      child: Row(
+        children: List.generate(7, (index) {
+          final day = daysOfWeek[index];
+          final isSelected = _isSameDay(day, selectedDate);
+          return Expanded(
+            child: Padding(
+              padding: EdgeInsets.only(right: index == 6 ? 0 : 6),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(16),
+                onTap: () => ref.read(selectedDateProvider.notifier).state = day,
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 180),
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  decoration: BoxDecoration(
+                    gradient: isSelected ? AppTheme.primaryGradient : null,
+                    color: isSelected ? null : AppTheme.surfaceRaised.withValues(alpha: 0.62),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: isSelected ? AppTheme.primary.withValues(alpha: 0.2) : AppTheme.border,
+                    ),
+                  ),
+                  child: Column(
+                    children: [
+                      Text(
+                        dayNames[index],
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: isSelected ? AppTheme.onPrimary : AppTheme.textSecondary,
+                              fontWeight: FontWeight.w800,
+                            ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '${day.day}',
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              color: isSelected ? AppTheme.onPrimary : AppTheme.textPrimary,
+                            ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+        }),
+      ),
+    );
+  }
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
+  bool _isSameDay(DateTime a, DateTime b) {
+    return a.year == b.year && a.month == b.month && a.day == b.day;
+  }
+}
+
+class _TasksTab extends ConsumerWidget {
+  final VoidCallback onAddTask;
+
+  const _TasksTab({required this.onAddTask});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final selectedDate = ref.watch(selectedDateProvider);
+    final tasksAsync = ref.watch(taskListProvider);
+
+    return Column(
+      children: [
+        _TabHeader(
+          title: 'Daily tasks',
+          buttonLabel: 'Add task',
+          icon: Icons.add_rounded,
+          onTap: onAddTask,
+        ),
+        Expanded(
+          child: tasksAsync.when(
+            data: (allTasks) {
+              final filteredTasks = allTasks.where((task) {
+                return task.scheduleTime.year == selectedDate.year &&
+                    task.scheduleTime.month == selectedDate.month &&
+                    task.scheduleTime.day == selectedDate.day;
+              }).toList();
+
+              if (filteredTasks.isEmpty) {
+                return const Padding(
+                  padding: EdgeInsets.all(20),
+                  child: EmptyState(
+                    icon: Icons.assignment_turned_in_outlined,
+                    title: 'No tasks scheduled',
+                    message: 'Add one meaningful task for the selected day.',
+                  ),
+                );
+              }
+
+              return ListView.separated(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 110),
+                itemCount: filteredTasks.length,
+                separatorBuilder: (context, index) => const SizedBox(height: 10),
+                itemBuilder: (context, index) {
+                  final task = filteredTasks[index];
+                  return _TaskCard(task: task);
+                },
+              );
+            },
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (err, stack) => Center(child: Text('Error: $err')),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _TaskCard extends ConsumerWidget {
+  final TaskModel task;
+
+  const _TaskCard({required this.task});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isHigh = task.priority == 'High';
+    final color = isHigh ? AppTheme.error : AppTheme.primary;
+
+    return Dismissible(
+      key: Key('task_${task.id}'),
+      direction: DismissDirection.endToStart,
+      background: Container(
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: 20),
+        decoration: BoxDecoration(
+          color: AppTheme.error,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: const Icon(Icons.delete_rounded, color: AppTheme.onPrimary),
+      ),
+      onDismissed: (_) => ref.read(taskListProvider.notifier).deleteTask(task.id),
+      child: LiquidGlassPanel(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        radius: 20,
         child: Row(
           children: [
             Checkbox(
               value: task.isCompleted,
-              onChanged: (val) async {
-                await ref.read(taskListProvider.notifier).toggleTask(task.id);
-              },
-              activeColor: theme.colorScheme.primary,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(4),
-              ),
+              onChanged: (_) => ref.read(taskListProvider.notifier).toggleTask(task.id),
             ),
             const SizedBox(width: 8),
             Expanded(
@@ -330,214 +491,337 @@ class _PlannerViewState extends ConsumerState<PlannerView> {
                 children: [
                   Text(
                     task.title,
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      fontSize: 14,
-                      decoration: task.isCompleted
-                          ? TextDecoration.lineThrough
-                          : null,
-                      color: task.isCompleted
-                          ? theme.textTheme.bodyMedium?.color?.withValues(
-                              alpha: 0.5,
-                            )
-                          : null,
-                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          decoration: task.isCompleted ? TextDecoration.lineThrough : null,
+                          color: task.isCompleted
+                              ? AppTheme.textHint
+                              : AppTheme.textPrimary,
+                        ),
                   ),
-                  if (task.description != null) ...[
-                    const SizedBox(height: 4),
-                    Text(
-                      task.description!,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        fontSize: 12,
-                        color: theme.textTheme.bodyMedium?.color?.withValues(
-                          alpha: 0.7,
-                        ),
-                      ),
-                    ),
-                  ],
-                  const SizedBox(height: 6),
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.access_time,
-                        size: 12,
-                        color: theme.textTheme.bodyMedium?.color,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        formattedTime,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          fontSize: 11,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: priorityColor.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Text(
-                          task.priority,
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            fontSize: 10,
-                            color: priorityColor,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ],
+                  const SizedBox(height: 3),
+                  Text(
+                    task.description ?? 'No description',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.bodySmall,
                   ),
                 ],
               ),
             ),
+            const SizedBox(width: 10),
+            StatusPill(label: task.priority, color: color),
           ],
         ),
       ),
     );
   }
+}
 
-  Widget _buildCalendarStrip(BuildContext context) {
-    final theme = Theme.of(context);
-    final days = [
-      {'day': 'Mon', 'date': '13'},
-      {'day': 'Tue', 'date': '14'},
-      {'day': 'Wed', 'date': '15'},
-      {'day': 'Thu', 'date': '16', 'active': true},
-      {'day': 'Fri', 'date': '17'},
-      {'day': 'Sat', 'date': '18'},
-      {'day': 'Sun', 'date': '19'},
-    ];
+class _RoutinesTab extends ConsumerWidget {
+  final VoidCallback onAddRoutine;
 
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: days.map((d) {
-          final isActive = d['active'] == true;
-          return Container(
-            margin: const EdgeInsets.only(right: 12),
-            width: 48,
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            decoration: BoxDecoration(
-              color: isActive
-                  ? theme.colorScheme.primary
-                  : theme.colorScheme.surface,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: isActive ? theme.colorScheme.primary : Colors.white10,
-                width: 1,
-              ),
-            ),
-            child: Column(
-              children: [
-                Text(
-                  d['day'] as String,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    fontSize: 12,
-                    color: isActive
-                        ? Colors.white70
-                        : theme.textTheme.bodyMedium?.color,
+  const _RoutinesTab({required this.onAddRoutine});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final routinesAsync = ref.watch(routineListProvider);
+
+    return Column(
+      children: [
+        _TabHeader(
+          title: 'Habitual routines',
+          buttonLabel: 'Add routine',
+          icon: Icons.add_rounded,
+          onTap: onAddRoutine,
+        ),
+        Expanded(
+          child: routinesAsync.when(
+            data: (routines) {
+              if (routines.isEmpty) {
+                return const Padding(
+                  padding: EdgeInsets.all(20),
+                  child: EmptyState(
+                    icon: Icons.repeat_rounded,
+                    title: 'No routines yet',
+                    message: 'Create morning, study, or night anchors.',
                   ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  d['date'] as String,
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: isActive
-                        ? Colors.white
-                        : theme.textTheme.titleLarge?.color,
-                  ),
-                ),
-              ],
-            ),
-          );
-        }).toList(),
-      ),
+                );
+              }
+
+              final morning = routines.where((r) => r.timeOfDay == 'Morning').toList();
+              final study = routines.where((r) => r.timeOfDay == 'Study').toList();
+              final night = routines.where((r) => r.timeOfDay == 'Night').toList();
+
+              return ListView(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 110),
+                children: [
+                  if (morning.isNotEmpty)
+                    _RoutineCategory(
+                      title: 'Morning routine',
+                      items: morning,
+                      icon: Icons.wb_sunny_rounded,
+                      color: AppTheme.accent,
+                    ),
+                  if (study.isNotEmpty)
+                    _RoutineCategory(
+                      title: 'Study session',
+                      items: study,
+                      icon: Icons.school_rounded,
+                      color: AppTheme.primary,
+                    ),
+                  if (night.isNotEmpty)
+                    _RoutineCategory(
+                      title: 'Night routine',
+                      items: night,
+                      icon: Icons.nights_stay_rounded,
+                      color: AppTheme.secondary,
+                    ),
+                ],
+              );
+            },
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (err, stack) => Center(child: Text('Error: $err')),
+          ),
+        ),
+      ],
     );
   }
+}
 
-  Widget _buildRoutineCard(
-    BuildContext context, {
-    required String title,
-    required String time,
-    required List<String> items,
-    required IconData icon,
-    required Color iconColor,
-  }) {
-    final theme = Theme.of(context);
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
+class _RoutineCategory extends ConsumerWidget {
+  final String title;
+  final List<RoutineModel> items;
+  final IconData icon;
+  final Color color;
+
+  const _RoutineCategory({
+    required this.title,
+    required this.items,
+    required this.icon,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: LiquidGlassPanel(
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                Icon(icon, color: iconColor, size: 24),
+                LiquidIconBadge(icon: icon, color: color, size: 40, iconSize: 19),
                 const SizedBox(width: 12),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: theme.textTheme.titleLarge?.copyWith(fontSize: 16),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      time,
-                      style: theme.textTheme.bodyMedium?.copyWith(fontSize: 12),
-                    ),
-                  ],
-                ),
-                const Spacer(),
-                IconButton(
-                  onPressed: () {},
-                  icon: const Icon(Icons.arrow_forward_ios, size: 14),
-                ),
+                Text(title, style: Theme.of(context).textTheme.titleMedium),
               ],
             ),
-            const Divider(height: 24, color: Colors.white10),
+            const SizedBox(height: 14),
             Wrap(
               spacing: 8,
               runSpacing: 8,
               children: items.map((item) {
-                return Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.03),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: Colors.white10),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.check_circle_outline,
-                        size: 12,
-                        color: theme.colorScheme.primary,
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        item,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ),
+                return FilterChip(
+                  label: Text(item.title),
+                  selected: item.isCompleted,
+                  onSelected: (_) =>
+                      ref.read(routineListProvider.notifier).toggleRoutine(item.id),
+                  selectedColor: color.withValues(alpha: 0.16),
+                  checkmarkColor: color,
+                  side: BorderSide(color: color.withValues(alpha: 0.24)),
                 );
               }).toList(),
             ),
           ],
         ),
       ),
+    );
+  }
+}
+
+class _GoalsTab extends ConsumerWidget {
+  final VoidCallback onAddGoal;
+
+  const _GoalsTab({required this.onAddGoal});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final goalsAsync = ref.watch(goalListProvider);
+
+    return Column(
+      children: [
+        _TabHeader(
+          title: 'Target goals',
+          buttonLabel: 'Add goal',
+          icon: Icons.add_rounded,
+          onTap: onAddGoal,
+        ),
+        Expanded(
+          child: goalsAsync.when(
+            data: (goals) {
+              if (goals.isEmpty) {
+                return const Padding(
+                  padding: EdgeInsets.all(20),
+                  child: EmptyState(
+                    icon: Icons.track_changes_rounded,
+                    title: 'No active goals',
+                    message: 'Set one measurable goal and give it a date.',
+                  ),
+                );
+              }
+
+              return ListView.separated(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 110),
+                itemCount: goals.length,
+                separatorBuilder: (context, index) => const SizedBox(height: 10),
+                itemBuilder: (context, index) {
+                  return _GoalCard(goal: goals[index]);
+                },
+              );
+            },
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (err, stack) => Center(child: Text('Error: $err')),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _GoalCard extends ConsumerWidget {
+  final GoalModel goal;
+
+  const _GoalCard({required this.goal});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final formattedDate =
+        '${goal.targetDate.day}/${goal.targetDate.month}/${goal.targetDate.year}';
+    final color = goal.isLongTerm ? AppTheme.secondary : AppTheme.primary;
+
+    return LiquidGlassPanel(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      radius: 20,
+      child: Row(
+        children: [
+          Checkbox(
+            value: goal.isCompleted,
+            onChanged: (_) => ref.read(goalListProvider.notifier).toggleGoal(goal.id),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  goal.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        decoration: goal.isCompleted ? TextDecoration.lineThrough : null,
+                        color: goal.isCompleted ? AppTheme.textHint : AppTheme.textPrimary,
+                      ),
+                ),
+                const SizedBox(height: 3),
+                Text('Target date: $formattedDate',
+                    style: Theme.of(context).textTheme.bodySmall),
+              ],
+            ),
+          ),
+          const SizedBox(width: 10),
+          StatusPill(
+            label: goal.isLongTerm ? 'Long term' : 'Short term',
+            color: color,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TabHeader extends StatelessWidget {
+  final String title;
+  final String buttonLabel;
+  final IconData icon;
+  final VoidCallback onTap;
+
+  const _TabHeader({
+    required this.title,
+    required this.buttonLabel,
+    required this.icon,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 2, 20, 12),
+      child: SectionTitle(
+        title: title,
+        action: TextButton.icon(
+          onPressed: onTap,
+          icon: Icon(icon, size: 18),
+          label: Text(buttonLabel),
+        ),
+      ),
+    );
+  }
+}
+
+class _SheetFrame extends StatelessWidget {
+  final Widget child;
+
+  const _SheetFrame({required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+        top: 10,
+        left: 20,
+        right: 20,
+      ),
+      child: LiquidGlassPanel(
+        padding: const EdgeInsets.all(20),
+        shadows: const [],
+        child: child,
+      ),
+    );
+  }
+}
+
+class _SheetTitle extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+
+  const _SheetTitle({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        LiquidIconBadge(icon: icon, color: AppTheme.primary),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(title, style: Theme.of(context).textTheme.titleLarge),
+              const SizedBox(height: 3),
+              Text(subtitle, style: Theme.of(context).textTheme.bodySmall),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

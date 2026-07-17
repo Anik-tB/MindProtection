@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:isar/isar.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/db/isar_service.dart';
@@ -63,7 +64,7 @@ class TaskRepositoryImpl implements TaskRepository {
         await _supabase.from('tasks').delete().eq('id', id);
       } catch (e) {
         // Fail silently on network errors
-        print('Cloud delete failed: $e');
+        debugPrint('Cloud delete failed: $e');
       }
     }
   }
@@ -116,7 +117,7 @@ class TaskRepositoryImpl implements TaskRepository {
         });
       }
     } catch (e) {
-      print('Cloud sync failed: $e');
+      debugPrint('Cloud sync failed: $e');
     }
   }
 
@@ -136,7 +137,7 @@ class TaskRepositoryImpl implements TaskRepository {
         'is_completed': task.isCompleted,
       });
     } catch (e) {
-      print('Cloud upload failed: $e');
+      debugPrint('Cloud upload failed: $e');
     }
   }
 }
