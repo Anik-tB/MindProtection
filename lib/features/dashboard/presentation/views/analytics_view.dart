@@ -9,6 +9,7 @@ import '../../../../core/ui/liquid_glass.dart';
 import '../../../blocking/data/models/screen_time_entry.dart';
 import '../../../blocking/data/services/android_blocking_service.dart';
 import '../../../focus/presentation/viewmodels/focus_timer_notifier.dart';
+import '../../../focus/presentation/views/subject_focus_breakdown_card.dart';
 import '../viewmodels/screen_time_provider.dart';
 
 class AnalyticsView extends ConsumerWidget {
@@ -50,6 +51,8 @@ class AnalyticsView extends ConsumerWidget {
           _InsightsHeader(minutes: minutes),
           const SizedBox(height: 14),
           _BarChartCard(minutes: minutes, weekdays: weekdays),
+          const SizedBox(height: 14),
+          SubjectFocusBreakdownCard(sessions: sessions),
           const SizedBox(height: 14),
           const _ScreenTimeCard(),
           const SizedBox(height: 14),

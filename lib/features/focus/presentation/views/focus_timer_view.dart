@@ -191,6 +191,20 @@ class _FocusTimerViewState extends ConsumerState<FocusTimerView> {
     final sessionsAsync = ref.watch(focusSessionListProvider);
     final sessions = sessionsAsync.value ?? [];
 
+    final customSubjects = sessions
+        .where((s) => s.isCompleted)
+        .map((s) => s.subject.trim())
+        .where((sub) =>
+            sub.isNotEmpty &&
+            sub != 'General' &&
+            sub != 'Coding & Engineering' &&
+            sub != 'Deep Reading & Exam Prep' &&
+            sub != 'Creative Design Sprint' &&
+            sub != 'Mindful Breathing & Stillness')
+        .toSet()
+        .toList()
+      ..sort();
+
     final today = DateTime.now();
     final todaySessions = sessions.where((session) {
       return session.startTime.year == today.year &&
@@ -306,6 +320,16 @@ class _FocusTimerViewState extends ConsumerState<FocusTimerView> {
                               HapticFeedback.lightImpact();
                             },
                           ),
+                          ...customSubjects.map((sub) => Padding(
+                                padding: const EdgeInsets.only(left: 8),
+                                child: _SubjectPresetPill(
+                                  label: '📁 $sub',
+                                  onTap: () {
+                                    _subjectController.text = sub;
+                                    HapticFeedback.lightImpact();
+                                  },
+                                ),
+                              )),
                         ],
                       ),
                     ),
