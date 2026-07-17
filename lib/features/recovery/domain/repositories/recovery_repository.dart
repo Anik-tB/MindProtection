@@ -6,4 +6,5 @@ abstract class RecoveryRepository {
   Future<void> logRelapse(String trigger);
   Future<void> logUrge(String trigger);
   Future<void> resetSobriety();
+  Future<void> syncWithCloud();
 }

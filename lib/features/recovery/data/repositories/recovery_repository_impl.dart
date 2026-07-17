@@ -101,6 +101,40 @@ class RecoveryRepositoryImpl implements RecoveryRepository {
     await _syncToCloud(status);
   }
 
+  @override
+  Future<void> syncWithCloud() async {
+    final user = _supabase.auth.currentUser;
+    if (user == null) return;
+
+    try {
+      final List<dynamic> remoteData = await _supabase
+          .from('sobriety')
+          .select()
+          .eq('user_id', user.id);
+
+      if (remoteData.isNotEmpty) {
+        final data = remoteData.first;
+        final status = await _isar.sobrietyModels.get(1) ?? SobrietyModel();
+        status.sobrietyStartDate = DateTime.tryParse(data['sobriety_start_date'] ?? '') ?? DateTime.now();
+        status.currentStreakDays = data['current_streak_days'] ?? 0;
+        status.longestStreakDays = data['longest_streak_days'] ?? 0;
+        if (data['triggers_log'] != null) {
+          status.triggersLog = List<String>.from(data['triggers_log']);
+        }
+        await _isar.writeTxn(() async {
+          await _isar.sobrietyModels.put(status);
+        });
+      } else {
+        final local = await _isar.sobrietyModels.get(1);
+        if (local != null) {
+          await _syncToCloud(local);
+        }
+      }
+    } catch (e) {
+      debugPrint('Sobriety syncWithCloud error: $e');
+    }
+  }
+
   Future<void> _syncToCloud(SobrietyModel model) async {
     final user = _supabase.auth.currentUser;
     if (user == null) return;
