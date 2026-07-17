@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -155,6 +156,7 @@ class _FocusTimerViewState extends ConsumerState<FocusTimerView> {
                   ),
                   onPressed: () {
                     if (_emergencyController.text.trim() == _validationPhrase) {
+                      HapticFeedback.heavyImpact();
                       Navigator.of(context).pop();
                       ref.read(focusTimerProvider.notifier).reset();
                       ScaffoldMessenger.of(context).showSnackBar(
@@ -268,6 +270,45 @@ class _FocusTimerViewState extends ConsumerState<FocusTimerView> {
                         ),
                       ),
                     ),
+                    const SizedBox(height: 10),
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [
+                          _SubjectPresetPill(
+                            label: '💻 Coding / Dev',
+                            onTap: () {
+                              _subjectController.text = 'Coding & Engineering';
+                              HapticFeedback.lightImpact();
+                            },
+                          ),
+                          const SizedBox(width: 8),
+                          _SubjectPresetPill(
+                            label: '📚 Exam Prep & Study',
+                            onTap: () {
+                              _subjectController.text = 'Deep Reading & Exam Prep';
+                              HapticFeedback.lightImpact();
+                            },
+                          ),
+                          const SizedBox(width: 8),
+                          _SubjectPresetPill(
+                            label: '🎨 Design & Creative',
+                            onTap: () {
+                              _subjectController.text = 'Creative Design Sprint';
+                              HapticFeedback.lightImpact();
+                            },
+                          ),
+                          const SizedBox(width: 8),
+                          _SubjectPresetPill(
+                            label: '🧘 Meditation & Rest',
+                            onTap: () {
+                              _subjectController.text = 'Mindful Breathing & Stillness';
+                              HapticFeedback.lightImpact();
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
                     const SizedBox(height: 22),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -352,6 +393,40 @@ class _FocusTimerViewState extends ConsumerState<FocusTimerView> {
 
   String _formatTimeOfDay(DateTime dateTime) {
     return '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
+  }
+}
+
+class _SubjectPresetPill extends StatelessWidget {
+  final String label;
+  final VoidCallback onTap;
+
+  const _SubjectPresetPill({required this.label, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+          decoration: BoxDecoration(
+            color: AppTheme.primary.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: AppTheme.primary.withValues(alpha: 0.3)),
+          ),
+          child: Text(
+            label,
+            style: const TextStyle(
+              color: AppTheme.primaryLight,
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
 
@@ -486,7 +561,10 @@ class _ModeChip extends StatelessWidget {
     return ChoiceChip(
       label: Text(label),
       selected: isActive,
-      onSelected: (_) => onTap(),
+      onSelected: (_) {
+        HapticFeedback.lightImpact();
+        onTap();
+      },
       selectedColor: color.withValues(alpha: 0.16),
       checkmarkColor: color,
       labelStyle: GoogleFonts.inter(
@@ -575,7 +653,10 @@ class _PrimaryTimerButton extends StatelessWidget {
         shape: const CircleBorder(),
         child: InkWell(
           customBorder: const CircleBorder(),
-          onTap: onTap,
+          onTap: () {
+            HapticFeedback.heavyImpact();
+            onTap();
+          },
           child: Icon(
             isRunning ? Icons.pause_rounded : Icons.play_arrow_rounded,
             color: AppTheme.onPrimary,
@@ -612,7 +693,10 @@ class _RoundControlButton extends StatelessWidget {
         shadows: const [],
         tint: isActive ? color.withValues(alpha: 0.1) : null,
         borderColor: isActive ? color.withValues(alpha: 0.28) : AppTheme.glassStroke,
-        onTap: onTap,
+        onTap: () {
+          HapticFeedback.mediumImpact();
+          onTap();
+        },
         child: SizedBox(
           width: 52,
           height: 52,
