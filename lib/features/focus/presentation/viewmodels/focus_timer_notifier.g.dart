@@ -38,7 +38,7 @@ final focusSessionListProvider =
 
 typedef FocusSessionListRef
     = AutoDisposeStreamProviderRef<List<FocusSessionModel>>;
-String _$focusTimerHash() => r'77ba47cb2e3178ae4dae6ec5ca81a7578ab680e1';
+String _$focusTimerHash() => r'c835dc10b727cae603ed489c7a8dd956c6ced440';
 
 /// See also [FocusTimer].
 @ProviderFor(FocusTimer)

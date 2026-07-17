@@ -11,6 +11,8 @@ import '../../../gamification/presentation/viewmodels/gamification_notifier.dart
 import '../../../recovery/presentation/viewmodels/recovery_notifier.dart';
 import '../../../wellbeing/presentation/viewmodels/wellbeing_notifier.dart';
 import '../../../gamification/presentation/views/guardian_sanctuary_modal.dart';
+import '../../../notifications/presentation/viewmodels/notification_notifier.dart';
+import '../../../notifications/presentation/views/notifications_reminders_view.dart';
 import 'analytics_view.dart';
 
 class DashboardView extends ConsumerWidget {
@@ -58,7 +60,14 @@ class DashboardView extends ConsumerWidget {
                       title: _greetingTitle(),
                       subtitle: 'Your protection system is ready for today.',
                       icon: Icons.shield_rounded,
-                      trailing: _ProfileAccountButton(level: stats.level),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const _NotificationBellButton(),
+                          const SizedBox(width: 10),
+                          _ProfileAccountButton(level: stats.level),
+                        ],
+                      ),
                     ),
                     const SizedBox(height: 18),
                     _GuardianProgressCard(
@@ -741,6 +750,61 @@ class _ProfileAccountButton extends ConsumerWidget {
           child: FadeTransition(opacity: anim1, child: child),
         );
       },
+    );
+  }
+}
+
+class _NotificationBellButton extends ConsumerWidget {
+  const _NotificationBellButton();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final notifState = ref.watch(notificationNotifierProvider);
+    final count = notifState.value?.vaultItems.length ?? 0;
+
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.lightImpact();
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const NotificationsRemindersView()),
+        );
+      },
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: AppTheme.surfaceCard,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: AppTheme.borderAccent),
+            ),
+            child: const Icon(Icons.notifications_rounded, color: AppTheme.textPrimary, size: 20),
+          ),
+          if (count > 0)
+            Positioned(
+              top: -4,
+              right: -4,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                decoration: BoxDecoration(
+                  color: AppTheme.error,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: AppTheme.surfaceCard, width: 1.5),
+                ),
+                child: Text(
+                  '$count',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 9,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
     );
   }
 }

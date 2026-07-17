@@ -35,7 +35,7 @@ final habitListProvider = AutoDisposeStreamProvider<List<HabitModel>>.internal(
 );
 
 typedef HabitListRef = AutoDisposeStreamProviderRef<List<HabitModel>>;
-String _$habitListNotifierHash() => r'ece7d832c4165d1f177faae8878a3fb5b82cd3ac';
+String _$habitListNotifierHash() => r'14da0bfcd0004a64f78075133ace0aa29607f8dc';
 
 /// See also [HabitListNotifier].
 @ProviderFor(HabitListNotifier)

@@ -39,7 +39,7 @@ final todayWellbeingLogProvider =
 );
 
 typedef TodayWellbeingLogRef = AutoDisposeStreamProviderRef<WellbeingLogModel?>;
-String _$wellbeingNotifierHash() => r'6c38a98cf00c7adb33e1c3e45f5fe0ad2dd17803';
+String _$wellbeingNotifierHash() => r'12f55b4caa857aae6505b1a89339a2d5993816f5';
 
 /// See also [WellbeingNotifier].
 @ProviderFor(WellbeingNotifier)
