@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'package:flutter/services.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/ui/liquid_glass.dart';
 import '../../../gamification/presentation/viewmodels/gamification_notifier.dart';
+import '../../../gamification/presentation/views/guardian_sanctuary_modal.dart';
 import '../../data/models/habit_model.dart';
 import '../viewmodels/habit_notifier.dart';
 
@@ -53,6 +55,62 @@ class _HabitTrackerViewState extends ConsumerState<HabitTrackerView> {
                       ),
                     ),
                   ],
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Quick Protector Rituals',
+                  style: GoogleFonts.inter(
+                    color: AppTheme.textSecondary,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      _RitualTemplatePill(
+                        label: '🚫 No-Scroll Morning',
+                        desc: 'First 30m after waking up without checking social media or email.',
+                        onTap: () {
+                          titleController.text = 'No-Scroll Morning';
+                          descController.text = 'First 30m after waking up without social media.';
+                          HapticFeedback.lightImpact();
+                        },
+                      ),
+                      const SizedBox(width: 8),
+                      _RitualTemplatePill(
+                        label: '💧 500ml Water on Wake',
+                        desc: 'Hydrate immediately before coffee or breakfast to kickstart brain function.',
+                        onTap: () {
+                          titleController.text = '500ml Water on Wake';
+                          descController.text = 'Hydrate before coffee to kickstart focus.';
+                          HapticFeedback.lightImpact();
+                        },
+                      ),
+                      const SizedBox(width: 8),
+                      _RitualTemplatePill(
+                        label: '🚶 15m Evening Walk',
+                        desc: 'Decompress outside without headphones to clear residual dopamine.',
+                        onTap: () {
+                          titleController.text = '15m Evening Walk';
+                          descController.text = 'Decompress outside without headphones.';
+                          HapticFeedback.lightImpact();
+                        },
+                      ),
+                      const SizedBox(width: 8),
+                      _RitualTemplatePill(
+                        label: '📖 Read 10 Pages Before Bed',
+                        desc: 'Replace late-night phone browsing with calming physical reading.',
+                        onTap: () {
+                          titleController.text = 'Read 10 Pages Before Bed';
+                          descController.text = 'Replace phone screen with reading before sleep.';
+                          HapticFeedback.lightImpact();
+                        },
+                      ),
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 18),
                 TextField(
@@ -275,9 +333,16 @@ class _HabitCard extends ConsumerWidget {
                 borderRadius: BorderRadius.circular(999),
                 onTap: doneToday
                     ? null
-                    : () => ref
-                        .read(habitListNotifierProvider.notifier)
-                        .completeHabit(habit.id),
+                    : () async {
+                        HapticFeedback.mediumImpact();
+                        final newStreak = await ref
+                            .read(habitListNotifierProvider.notifier)
+                            .completeHabit(habit.id);
+                        if ([3, 7, 14, 30, 60, 100].contains(newStreak) && context.mounted) {
+                          HapticFeedback.heavyImpact();
+                          _showMilestonePopup(context, habit.title, newStreak);
+                        }
+                      },
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 240),
                   curve: Curves.easeOutCubic,
@@ -341,6 +406,8 @@ class _HabitCard extends ConsumerWidget {
                       ),
                     ],
                   ),
+                  const SizedBox(height: 12),
+                  _WeeklyHeatmapStrip(history: habit.completionHistory ?? []),
                 ],
               ),
             ),
@@ -355,6 +422,153 @@ class _HabitCard extends ConsumerWidget {
           ],
         ),
       ),
+    );
+  }
+
+  void _showMilestonePopup(BuildContext context, String habitTitle, int streak) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppTheme.surfaceRaised,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: Row(
+          children: [
+            const LiquidIconBadge(
+              icon: Icons.local_fire_department_rounded,
+              color: AppTheme.error,
+              size: 44,
+              iconSize: 24,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text('Milestone Streak!', style: Theme.of(ctx).textTheme.titleLarge),
+            ),
+          ],
+        ),
+        content: Text(
+          'Incredible discipline! You hit a $streak-day streak on "$habitTitle"! Awarded +${streak * 5} Bonus XP and +${streak * 2} Coins for your Guardian Sanctuary.',
+          style: Theme.of(ctx).textTheme.bodyMedium?.copyWith(color: AppTheme.textSecondary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Keep Going', style: TextStyle(color: AppTheme.textSecondary)),
+          ),
+          ElevatedButton.icon(
+            onPressed: () {
+              Navigator.of(ctx).pop();
+              GuardianSanctuaryModal.show(context);
+            },
+            icon: const Icon(Icons.storefront_rounded, size: 18),
+            label: const Text('Sanctuary Shop'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.error,
+              foregroundColor: AppTheme.onPrimary,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RitualTemplatePill extends StatelessWidget {
+  final String label;
+  final String desc;
+  final VoidCallback onTap;
+
+  const _RitualTemplatePill({
+    required this.label,
+    required this.desc,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          decoration: BoxDecoration(
+            color: AppTheme.primary.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: AppTheme.primary.withValues(alpha: 0.3)),
+          ),
+          child: Text(
+            label,
+            style: GoogleFonts.inter(
+              color: AppTheme.primaryLight,
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _WeeklyHeatmapStrip extends StatelessWidget {
+  final List<DateTime> history;
+
+  const _WeeklyHeatmapStrip({required this.history});
+
+  @override
+  Widget build(BuildContext context) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final days = List.generate(7, (i) => today.subtract(Duration(days: 6 - i)));
+    final labels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: days.map((day) {
+        final label = labels[day.weekday - 1];
+        final isCompleted = history.any((h) =>
+            h.year == day.year && h.month == day.month && h.day == day.day);
+        final isToday = day.year == today.year &&
+            day.month == today.month &&
+            day.day == today.day;
+
+        return Column(
+          children: [
+            Text(
+              label,
+              style: GoogleFonts.inter(
+                color: isToday ? AppTheme.primaryLight : AppTheme.textHint,
+                fontSize: 10,
+                fontWeight: isToday ? FontWeight.w800 : FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 5),
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 260),
+              width: 22,
+              height: 22,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: isCompleted
+                    ? AppTheme.primary
+                    : (isToday ? AppTheme.surfaceRaised : Colors.transparent),
+                border: Border.all(
+                  color: isCompleted
+                      ? AppTheme.primaryLight
+                      : (isToday ? AppTheme.primary : AppTheme.border),
+                  width: isToday ? 1.5 : 1.0,
+                ),
+                boxShadow: isCompleted ? AppTheme.primaryGlow : null,
+              ),
+              child: isCompleted
+                  ? const Icon(Icons.check_rounded, size: 13, color: AppTheme.onPrimary)
+                  : null,
+            ),
+          ],
+        );
+      }).toList(),
     );
   }
 }
