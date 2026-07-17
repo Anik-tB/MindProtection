@@ -234,7 +234,8 @@ class SectionTitle extends StatelessWidget {
         Expanded(
           child: Text(title, style: Theme.of(context).textTheme.titleMedium),
         ),
-        if (action != null) action,
+        // ignore: use_null_aware_elements
+        if (action != null) action!,
       ],
     );
   }
