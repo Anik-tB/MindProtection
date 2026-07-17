@@ -1,5 +1,6 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -436,7 +437,10 @@ class _ExportPanel extends StatelessWidget {
             label: 'Export',
             icon: Icons.download_rounded,
             expanded: false,
-            onPressed: () => _showExportDialog(context),
+            onPressed: () {
+              HapticFeedback.mediumImpact();
+              _showExportDialog(context);
+            },
           ),
         ],
       ),
@@ -444,42 +448,86 @@ class _ExportPanel extends StatelessWidget {
   }
 
   void _showExportDialog(BuildContext context) {
-    showDialog(
+    showGeneralDialog(
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text('Export report', style: Theme.of(context).textTheme.titleLarge),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _ExportOption(
-                icon: Icons.picture_as_pdf_rounded,
-                label: 'Export to PDF',
-                color: AppTheme.error,
-                onTap: () {
-                  Navigator.pop(context);
-                  _showMessage(context, 'PDF exported to downloads folder.');
-                },
+      barrierDismissible: true,
+      barrierLabel: 'Dismiss',
+      barrierColor: Colors.black.withValues(alpha: 0.72),
+      transitionDuration: const Duration(milliseconds: 240),
+      pageBuilder: (context, anim1, anim2) {
+        return Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 28),
+            child: Material(
+              color: Colors.transparent,
+              child: LiquidGlassPanel(
+                padding: const EdgeInsets.all(24),
+                radius: 28,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Export Report', style: Theme.of(context).textTheme.titleLarge),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Select a format to export your focus and habit analytics.',
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                    const SizedBox(height: 20),
+                    _ExportOption(
+                      icon: Icons.picture_as_pdf_rounded,
+                      label: 'Export to PDF',
+                      color: AppTheme.error,
+                      onTap: () {
+                        HapticFeedback.heavyImpact();
+                        Navigator.pop(context);
+                        _showMessage(context, 'PDF exported to Downloads folder.');
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    _ExportOption(
+                      icon: Icons.email_outlined,
+                      label: 'Email detailed report',
+                      color: AppTheme.primary,
+                      onTap: () {
+                        HapticFeedback.heavyImpact();
+                        Navigator.pop(context);
+                        _showMessage(context, 'Detailed report email has been queued.');
+                      },
+                    ),
+                  ],
+                ),
               ),
-              const SizedBox(height: 10),
-              _ExportOption(
-                icon: Icons.email_outlined,
-                label: 'Email detailed report',
-                color: AppTheme.primary,
-                onTap: () {
-                  Navigator.pop(context);
-                  _showMessage(context, 'Detailed report email has been sent.');
-                },
-              ),
-            ],
+            ),
           ),
+        );
+      },
+      transitionBuilder: (context, anim1, anim2, child) {
+        return ScaleTransition(
+          scale: Tween<double>(begin: 0.9, end: 1.0).animate(
+            CurvedAnimation(parent: anim1, curve: Curves.easeOutCubic),
+          ),
+          child: FadeTransition(opacity: anim1, child: child),
         );
       },
     );
   }
 
   void _showMessage(BuildContext context, String message) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.check_circle_rounded, color: AppTheme.primary),
+            const SizedBox(width: 10),
+            Expanded(child: Text(message)),
+          ],
+        ),
+        backgroundColor: AppTheme.surfaceRaised,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      ),
+    );
   }
 }
 
