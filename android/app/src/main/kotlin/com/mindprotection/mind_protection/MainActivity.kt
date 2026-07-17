@@ -105,6 +105,11 @@ class MainActivity : FlutterActivity() {
                     stopService(intent)
                     result.success(true)
                 }
+                "getBlockedApps" -> {
+                    val prefs = getSharedPreferences("com.mindprotection.blocking", Context.MODE_PRIVATE)
+                    val blocked = prefs.getStringSet("blocked_apps", emptySet()) ?: emptySet()
+                    result.success(blocked.toList())
+                }
                 "getUsageStats" -> {
                     if (!hasUsageStatsPermission()) {
                         result.error("PERMISSION_DENIED", "Usage Stats permission not granted", null)

@@ -1,47 +1,64 @@
-package com.mindprotection.mind_protection.services
+﻿package com.mindprotection.mind_protection.services
 
 import android.accessibilityservice.AccessibilityService
 import android.content.Context
 import android.content.Intent
 import android.view.accessibility.AccessibilityEvent
-import android.widget.Toast
+import com.mindprotection.mind_protection.BlockerOverlayActivity
 
 class AppBlockingAccessibilityService : AccessibilityService() {
+
+    // Track last blocked package to avoid relaunching overlay repeatedly
+    private var lastBlockedPackage: String = ""
+    private var lastBlockedTime: Long = 0L
 
     override fun onAccessibilityEvent(event: AccessibilityEvent) {
         if (event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
             val packageName = event.packageName?.toString() ?: return
-            
-            // Prevent blocking the host app to avoid infinite loops
+
+            // Never block our own app
             if (packageName == "com.mindprotection.mind_protection") {
+                lastBlockedPackage = ""
                 return
             }
 
+            // If already showing the overlay for this package, skip
+            if (packageName == "com.mindprotection.mind_protection" ||
+                packageName == lastBlockedPackage &&
+                System.currentTimeMillis() - lastBlockedTime < 3000L
+            ) return
+
             val prefs = getSharedPreferences("com.mindprotection.blocking", Context.MODE_PRIVATE)
             val blockedApps = prefs.getStringSet("blocked_apps", null) ?: emptySet()
-            
+
             if (blockedApps.contains(packageName)) {
-                blockAppRedirect()
+                lastBlockedPackage = packageName
+                lastBlockedTime = System.currentTimeMillis()
+                launchBlockerOverlay(packageName)
             }
         }
     }
 
-    private fun blockAppRedirect() {
-        // Redirect user to device launcher home screen
-        val startMain = Intent(Intent.ACTION_MAIN).apply {
-            addCategory(Intent.CATEGORY_HOME)
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+    private fun launchBlockerOverlay(blockedPackageName: String) {
+        // Resolve human-readable app name
+        val appName: String = try {
+            val pm = applicationContext.packageManager
+            pm.getApplicationLabel(pm.getApplicationInfo(blockedPackageName, 0)).toString()
+        } catch (e: Exception) {
+            blockedPackageName
         }
-        startActivity(startMain)
 
-        Toast.makeText(
-            applicationContext, 
-            "MindProtection: Focus Active. This app is blocked!", 
-            Toast.LENGTH_LONG
-        ).show()
+        val intent = Intent(applicationContext, BlockerOverlayActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or
+                    Intent.FLAG_ACTIVITY_CLEAR_TOP or
+                    Intent.FLAG_ACTIVITY_SINGLE_TOP
+            putExtra("package_name", blockedPackageName)
+            putExtra("app_name", appName)
+        }
+        startActivity(intent)
     }
 
     override fun onInterrupt() {
-        // Interrupt event handler no-op
+        // No-op
     }
 }
