@@ -42,6 +42,7 @@ dependencies:
   uuid: ^4.3.3
   permission_handler: ^12.0.3
   supabase_flutter: ^2.6.0
+  shared_preferences: ^2.3.4
 
 dev_dependencies:
   flutter_test:
