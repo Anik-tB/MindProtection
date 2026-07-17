@@ -3,8 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'package:flutter/services.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/ui/liquid_glass.dart';
+import '../viewmodels/wellbeing_notifier.dart';
+import '../../../gamification/presentation/views/guardian_sanctuary_modal.dart';
 
 class BreathingExercisesView extends ConsumerStatefulWidget {
   const BreathingExercisesView({super.key});
@@ -21,6 +24,7 @@ class _BreathingExercisesViewState extends ConsumerState<BreathingExercisesView>
 
   int _selectedTechniqueIndex = 0;
   bool _isPlaying = false;
+  bool _hapticsEnabled = true;
   int _phaseIndex = 0;
   int _secondsInPhaseRemaining = 0;
   int _totalSessionSeconds = 0;
@@ -110,6 +114,7 @@ class _BreathingExercisesViewState extends ConsumerState<BreathingExercisesView>
     _phaseTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (!mounted) return;
       if (_secondsInPhaseRemaining > 1) {
+        if (_hapticsEnabled) HapticFeedback.lightImpact();
         setState(() => _secondsInPhaseRemaining--);
       } else {
         _nextPhase();
@@ -133,6 +138,7 @@ class _BreathingExercisesViewState extends ConsumerState<BreathingExercisesView>
       _secondsInPhaseRemaining = nextPhase.duration;
     });
 
+    if (_hapticsEnabled) HapticFeedback.mediumImpact();
     _animateToPhase(nextPhase);
   }
 
@@ -148,11 +154,66 @@ class _BreathingExercisesViewState extends ConsumerState<BreathingExercisesView>
     _phaseTimer?.cancel();
     _sessionTimer?.cancel();
     _controller.stop();
+    final completedSeconds = _totalSessionSeconds;
     setState(() {
       _isPlaying = false;
       _phaseIndex = 0;
       _secondsInPhaseRemaining = _techniques[_selectedTechniqueIndex].phases[0].duration;
+      _totalSessionSeconds = 0;
     });
+
+    if (completedSeconds >= 60) {
+      final minutes = completedSeconds ~/ 60;
+      ref.read(wellbeingNotifierProvider.notifier).logMindfulness(minutes);
+      _showCompletionDialog(minutes);
+    }
+  }
+
+  void _showCompletionDialog(int minutes) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppTheme.surfaceRaised,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: Row(
+          children: [
+            const LiquidIconBadge(
+              icon: Icons.auto_awesome_rounded,
+              color: AppTheme.primary,
+              size: 44,
+              iconSize: 22,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text('Session Complete!', style: Theme.of(ctx).textTheme.titleLarge),
+            ),
+          ],
+        ),
+        content: Text(
+          'You completed $minutes mindful minute${minutes > 1 ? 's' : ''} of deep breathing! Logged to your daily wellbeing and awarded +${minutes * 5} XP for your Guardian Sanctuary.',
+          style: Theme.of(ctx).textTheme.bodyMedium?.copyWith(color: AppTheme.textSecondary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Close', style: TextStyle(color: AppTheme.textSecondary)),
+          ),
+          ElevatedButton.icon(
+            onPressed: () {
+              Navigator.of(ctx).pop();
+              GuardianSanctuaryModal.show(context);
+            },
+            icon: const Icon(Icons.storefront_rounded, size: 18),
+            label: const Text('View Sanctuary Shop'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.primary,
+              foregroundColor: AppTheme.onPrimary,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   String _formatSessionTime(int seconds) {
@@ -199,6 +260,18 @@ class _BreathingExercisesViewState extends ConsumerState<BreathingExercisesView>
                         style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                               fontWeight: FontWeight.w800,
                             ),
+                      ),
+                    ),
+                    InkWell(
+                      onTap: () {
+                        setState(() => _hapticsEnabled = !_hapticsEnabled);
+                        if (_hapticsEnabled) HapticFeedback.mediumImpact();
+                      },
+                      borderRadius: BorderRadius.circular(999),
+                      child: StatusPill(
+                        label: _hapticsEnabled ? 'Haptics ON' : 'Haptics OFF',
+                        icon: _hapticsEnabled ? Icons.vibration_rounded : Icons.phone_android_rounded,
+                        color: _hapticsEnabled ? AppTheme.primary : AppTheme.textSecondary,
                       ),
                     ),
                   ],
