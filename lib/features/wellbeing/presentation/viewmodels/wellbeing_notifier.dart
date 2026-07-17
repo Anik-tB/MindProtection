@@ -66,6 +66,19 @@ class WellbeingNotifier extends _$WellbeingNotifier {
     }
   }
 
+  Future<void> logMindfulness(int minutes) async {
+    final currentLog = await _repository.getOrCreateTodayLog();
+    final newMinutes = currentLog.mindfulMinutes + minutes;
+    await _repository.updateMindfulness(newMinutes);
+
+    // Reward mindful minutes
+    final gamificationNotifier = ref.read(gamificationProvider.notifier);
+    await gamificationNotifier.addXp(minutes * 5); // +5 XP per mindful minute
+    if (minutes >= 2) {
+      await gamificationNotifier.addCoins(minutes * 2);
+    }
+  }
+
   Future<void> syncWellbeing() async {
     await _repository.syncWithCloud();
   }
