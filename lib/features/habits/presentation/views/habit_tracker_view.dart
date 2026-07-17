@@ -9,6 +9,7 @@ import '../../../gamification/presentation/viewmodels/gamification_notifier.dart
 import '../../../gamification/presentation/views/guardian_sanctuary_modal.dart';
 import '../../data/models/habit_model.dart';
 import '../viewmodels/habit_notifier.dart';
+import 'habit_contribution_heatmap_card.dart';
 
 class HabitTrackerView extends ConsumerStatefulWidget {
   const HabitTrackerView({super.key});
@@ -25,6 +26,7 @@ class _HabitTrackerViewState extends ConsumerState<HabitTrackerView> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      backgroundColor: Colors.transparent,
       builder: (context) {
         return Padding(
           padding: EdgeInsets.only(
@@ -188,6 +190,8 @@ class _HabitTrackerViewState extends ConsumerState<HabitTrackerView> {
               ),
               const SizedBox(height: 18),
               _ProtectorCard(stats: stats),
+              const SizedBox(height: 18),
+              HabitContributionHeatmapCard(habits: habitsAsync.value ?? []),
               const SizedBox(height: 22),
               SectionTitle(
                 title: 'Daily rituals',
