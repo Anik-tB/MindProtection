@@ -137,4 +137,14 @@ class AndroidBlockingService {
       return [];
     }
   }
+
+  /// Returns the currently persisted list of blocked package names
+  static Future<List<String>> getBlockedApps() async {
+    try {
+      final List<dynamic> raw = await _channel.invokeMethod('getBlockedApps');
+      return raw.cast<String>();
+    } on PlatformException {
+      return [];
+    }
+  }
 }
