@@ -57,6 +57,12 @@ class AppBlocker extends _$AppBlocker {
     await AndroidBlockingService.updateBlockedApps(updated.toList());
   }
 
+  /// Bulk update the entire blocked set and persist immediately.
+  Future<void> bulkUpdate(Set<String> packages) async {
+    state = AsyncValue.data(packages);
+    await AndroidBlockingService.updateBlockedApps(packages.toList());
+  }
+
   /// Return the saved blocked set (used by Focus Timer).
   Future<List<String>> getBlockedList() async {
     final current = await future;

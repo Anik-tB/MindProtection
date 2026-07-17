@@ -195,7 +195,7 @@ class _AppBlockerViewState extends ConsumerState<AppBlockerView>
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Accessibility Service Banner
+                        // Accessibility Service Banner or Active Shield Status
                         if (!_isAccessibilityGranted)
                           Container(
                             margin: const EdgeInsets.only(bottom: 20),
@@ -269,6 +269,58 @@ class _AppBlockerViewState extends ConsumerState<AppBlockerView>
                                 ),
                               ],
                             ),
+                          )
+                        else
+                          Container(
+                            margin: const EdgeInsets.only(bottom: 20),
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: AppTheme.primarySoft.withValues(alpha: 0.3),
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                color: AppTheme.primary.withValues(alpha: 0.4),
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    color: AppTheme.primary.withValues(alpha: 0.2),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.shield_rounded,
+                                    color: AppTheme.primary,
+                                    size: 24,
+                                  ),
+                                ),
+                                const SizedBox(width: 14),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Blocker Shield Active & Armed',
+                                        style: GoogleFonts.outfit(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w700,
+                                          color: AppTheme.textPrimary,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        'Restricted apps will be intercepted immediately during Focus & Emergency sessions.',
+                                        style: GoogleFonts.inter(
+                                          fontSize: 12,
+                                          color: AppTheme.textSecondary,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
 
                         // Search Bar
@@ -326,6 +378,83 @@ class _AppBlockerViewState extends ConsumerState<AppBlockerView>
                                     size: 18,
                                   ),
                                 ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+
+                        // Quick Presets
+                        Text(
+                          'Quick Preset Rules',
+                          style: GoogleFonts.outfit(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: AppTheme.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          physics: const BouncingScrollPhysics(),
+                          child: Row(
+                            children: [
+                              _PresetActionChip(
+                                label: '⚡ Social Media',
+                                color: AppTheme.primary,
+                                onTap: () {
+                                  HapticFeedback.mediumImpact();
+                                  final socials = {
+                                    'com.instagram.android',
+                                    'com.zhiliaoapp.musically',
+                                    'com.twitter.android',
+                                    'com.facebook.katana',
+                                    'com.snapchat.android',
+                                    'com.reddit.frontpage',
+                                    'com.pinterest',
+                                    'com.linkedin.android',
+                                  };
+                                  ref.read(appBlockerProvider.notifier).bulkUpdate(
+                                        blockedSet.union(socials),
+                                      );
+                                },
+                              ),
+                              const SizedBox(width: 8),
+                              _PresetActionChip(
+                                label: '▶️ Video & Chat',
+                                color: AppTheme.secondary,
+                                onTap: () {
+                                  HapticFeedback.mediumImpact();
+                                  final videoChat = {
+                                    'com.google.android.youtube',
+                                    'com.whatsapp',
+                                    'com.discord',
+                                    'com.facebook.orca',
+                                  };
+                                  ref.read(appBlockerProvider.notifier).bulkUpdate(
+                                        blockedSet.union(videoChat),
+                                      );
+                                },
+                              ),
+                              const SizedBox(width: 8),
+                              _PresetActionChip(
+                                label: '🛡️ Block All Popular',
+                                color: AppTheme.accent,
+                                onTap: () {
+                                  HapticFeedback.mediumImpact();
+                                  ref.read(appBlockerProvider.notifier).bulkUpdate(
+                                        popularPkgs,
+                                      );
+                                },
+                              ),
+                              const SizedBox(width: 8),
+                              _PresetActionChip(
+                                label: '🚫 Clear All',
+                                color: AppTheme.error,
+                                onTap: () {
+                                  HapticFeedback.mediumImpact();
+                                  ref.read(appBlockerProvider.notifier).bulkUpdate({});
+                                },
+                              ),
                             ],
                           ),
                         ),
@@ -600,6 +729,41 @@ class _AppBlockerViewState extends ConsumerState<AppBlockerView>
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _PresetActionChip extends StatelessWidget {
+  final String label;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _PresetActionChip({
+    required this.label,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.15),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: color.withValues(alpha: 0.45)),
+        ),
+        child: Text(
+          label,
+          style: GoogleFonts.inter(
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+            color: color,
+          ),
+        ),
       ),
     );
   }
