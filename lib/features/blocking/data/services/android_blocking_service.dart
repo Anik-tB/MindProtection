@@ -123,4 +123,18 @@ class AndroidBlockingService {
       // Catch exceptions silently
     }
   }
+
+  /// Returns a list of per-app usage stats for today (requires Usage Stats permission)
+  /// Each entry contains: packageName (String), appName (String), usageMinutes (int)
+  static Future<List<Map<String, dynamic>>> getUsageStats() async {
+    try {
+      final List<dynamic> raw = await _channel.invokeMethod('getUsageStats');
+      return raw
+          .whereType<Map>()
+          .map((e) => Map<String, dynamic>.from(e))
+          .toList();
+    } on PlatformException {
+      return [];
+    }
+  }
 }
