@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/ui/liquid_glass.dart';
+import '../../../blocking/data/models/screen_time_entry.dart';
 import '../../../blocking/data/services/android_blocking_service.dart';
 import '../../../focus/presentation/viewmodels/focus_timer_notifier.dart';
 import '../viewmodels/screen_time_provider.dart';
@@ -629,6 +630,7 @@ class _ScreenTimeCard extends ConsumerStatefulWidget {
 
 class _ScreenTimeCardState extends ConsumerState<_ScreenTimeCard> {
   bool _expanded = false;
+  bool _showHistory = false;
 
   // Social/entertainment apps that get highlighted as high-risk
   static const _highRiskPackages = {
@@ -675,6 +677,33 @@ class _ScreenTimeCardState extends ConsumerState<_ScreenTimeCard> {
   @override
   Widget build(BuildContext context) {
     final screenTimeAsync = ref.watch(screenTimeProvider);
+    final historyAsync = ref.watch(historicalScreenTimeProvider(7));
+
+    // Resolve active entries based on current mode
+    final entriesAsync = _showHistory
+        ? historyAsync.whenData((models) {
+            final map = <String, ScreenTimeEntry>{};
+            for (final m in models) {
+              if (map.containsKey(m.packageName)) {
+                final old = map[m.packageName]!;
+                map[m.packageName] = ScreenTimeEntry(
+                  packageName: old.packageName,
+                  appName: old.appName,
+                  usageMinutes: old.usageMinutes + m.usageMinutes,
+                );
+              } else {
+                map[m.packageName] = ScreenTimeEntry(
+                  packageName: m.packageName,
+                  appName: m.appName,
+                  usageMinutes: m.usageMinutes,
+                );
+              }
+            }
+            final list = map.values.toList()
+              ..sort((a, b) => b.usageMinutes.compareTo(a.usageMinutes));
+            return list;
+          })
+        : screenTimeAsync;
 
     return LiquidGlassPanel(
       padding: const EdgeInsets.all(18),
@@ -695,18 +724,18 @@ class _ScreenTimeCardState extends ConsumerState<_ScreenTimeCard> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Today\'s Screen Time',
+                      _showHistory ? '7-Day Screen Time Vault' : 'Today\'s Screen Time',
                       style: GoogleFonts.outfit(
                         fontSize: 15,
                         fontWeight: FontWeight.w700,
                         color: AppTheme.textPrimary,
                       ),
                     ),
-                    screenTimeAsync.when(
+                    entriesAsync.when(
                       data: (entries) {
                         final total = entries.fold<int>(0, (s, e) => s + e.usageMinutes);
                         return Text(
-                          _formatTime(total),
+                          _showHistory ? '${_formatTime(total)} total in vault' : _formatTime(total),
                           style: GoogleFonts.outfit(
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
@@ -720,10 +749,71 @@ class _ScreenTimeCardState extends ConsumerState<_ScreenTimeCard> {
                   ],
                 ),
               ),
+              // Segmented pill: Today vs 7d
+              Container(
+                padding: const EdgeInsets.all(2),
+                decoration: BoxDecoration(
+                  color: AppTheme.surfaceRaised,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: AppTheme.border, width: 0.8),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    GestureDetector(
+                      onTap: () {
+                        HapticFeedback.lightImpact();
+                        setState(() => _showHistory = false);
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: !_showHistory ? AppTheme.info.withValues(alpha: 0.18) : Colors.transparent,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          'Today',
+                          style: GoogleFonts.inter(
+                            fontSize: 11,
+                            fontWeight: !_showHistory ? FontWeight.w800 : FontWeight.w600,
+                            color: !_showHistory ? AppTheme.info : AppTheme.textHint,
+                          ),
+                        ),
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () {
+                        HapticFeedback.lightImpact();
+                        setState(() => _showHistory = true);
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: _showHistory ? AppTheme.info.withValues(alpha: 0.18) : Colors.transparent,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          '7d Vault',
+                          style: GoogleFonts.inter(
+                            fontSize: 11,
+                            fontWeight: _showHistory ? FontWeight.w800 : FontWeight.w600,
+                            color: _showHistory ? AppTheme.info : AppTheme.textHint,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
               GestureDetector(
                 onTap: () {
                   HapticFeedback.lightImpact();
-                  ref.invalidate(screenTimeProvider);
+                  if (_showHistory) {
+                    ref.invalidate(historicalScreenTimeProvider(7));
+                  } else {
+                    ref.invalidate(screenTimeProvider);
+                  }
                 },
                 child: Container(
                   padding: const EdgeInsets.all(8),
@@ -737,7 +827,7 @@ class _ScreenTimeCardState extends ConsumerState<_ScreenTimeCard> {
             ],
           ),
           const SizedBox(height: 16),
-          screenTimeAsync.when(
+          entriesAsync.when(
             data: (entries) {
               if (entries.isEmpty) {
                 return _PermissionPromptContent();

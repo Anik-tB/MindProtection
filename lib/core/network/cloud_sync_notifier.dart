@@ -7,6 +7,7 @@ import '../../features/habits/presentation/viewmodels/habit_notifier.dart';
 import '../../features/focus/presentation/viewmodels/focus_timer_notifier.dart';
 import '../../features/recovery/presentation/viewmodels/recovery_notifier.dart';
 import '../../features/wellbeing/presentation/viewmodels/wellbeing_notifier.dart';
+import '../../features/blocking/data/repositories/screen_time_repository_impl.dart';
 
 part 'cloud_sync_notifier.g.dart';
 
@@ -22,7 +23,7 @@ class CloudSyncState {
     this.lastSyncedAt,
     this.lastError,
     this.syncedRepositoriesCount = 0,
-    this.totalRepositories = 7,
+    this.totalRepositories = 8,
   });
 
   CloudSyncState copyWith({
@@ -92,6 +93,11 @@ class CloudSyncNotifier extends _$CloudSyncNotifier {
 
       // 7. Sync Wellbeing Logs
       await ref.read(wellbeingRepositoryProvider).syncWithCloud();
+      count++;
+      state = state.copyWith(syncedRepositoriesCount: count);
+
+      // 8. Sync Screen Time Logs
+      await ref.read(screenTimeRepositoryProvider).syncWithCloud();
       count++;
       state = state.copyWith(
         isSyncing: false,
