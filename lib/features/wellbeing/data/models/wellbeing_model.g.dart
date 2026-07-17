@@ -22,18 +22,23 @@ const WellbeingLogModelSchema = CollectionSchema(
       name: r'date',
       type: IsarType.dateTime,
     ),
-    r'moodRating': PropertySchema(
+    r'mindfulMinutes': PropertySchema(
       id: 1,
+      name: r'mindfulMinutes',
+      type: IsarType.long,
+    ),
+    r'moodRating': PropertySchema(
+      id: 2,
       name: r'moodRating',
       type: IsarType.long,
     ),
     r'sleepDurationHours': PropertySchema(
-      id: 2,
+      id: 3,
       name: r'sleepDurationHours',
       type: IsarType.double,
     ),
     r'waterIntakeLiters': PropertySchema(
-      id: 3,
+      id: 4,
       name: r'waterIntakeLiters',
       type: IsarType.double,
     )
@@ -82,9 +87,10 @@ void _wellbeingLogModelSerialize(
   Map<Type, List<int>> allOffsets,
 ) {
   writer.writeDateTime(offsets[0], object.date);
-  writer.writeLong(offsets[1], object.moodRating);
-  writer.writeDouble(offsets[2], object.sleepDurationHours);
-  writer.writeDouble(offsets[3], object.waterIntakeLiters);
+  writer.writeLong(offsets[1], object.mindfulMinutes);
+  writer.writeLong(offsets[2], object.moodRating);
+  writer.writeDouble(offsets[3], object.sleepDurationHours);
+  writer.writeDouble(offsets[4], object.waterIntakeLiters);
 }
 
 WellbeingLogModel _wellbeingLogModelDeserialize(
@@ -96,9 +102,10 @@ WellbeingLogModel _wellbeingLogModelDeserialize(
   final object = WellbeingLogModel();
   object.date = reader.readDateTime(offsets[0]);
   object.id = id;
-  object.moodRating = reader.readLong(offsets[1]);
-  object.sleepDurationHours = reader.readDouble(offsets[2]);
-  object.waterIntakeLiters = reader.readDouble(offsets[3]);
+  object.mindfulMinutes = reader.readLong(offsets[1]);
+  object.moodRating = reader.readLong(offsets[2]);
+  object.sleepDurationHours = reader.readDouble(offsets[3]);
+  object.waterIntakeLiters = reader.readDouble(offsets[4]);
   return object;
 }
 
@@ -114,8 +121,10 @@ P _wellbeingLogModelDeserializeProp<P>(
     case 1:
       return (reader.readLong(offset)) as P;
     case 2:
-      return (reader.readDouble(offset)) as P;
+      return (reader.readLong(offset)) as P;
     case 3:
+      return (reader.readDouble(offset)) as P;
+    case 4:
       return (reader.readDouble(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -432,6 +441,62 @@ extension WellbeingLogModelQueryFilter
   }
 
   QueryBuilder<WellbeingLogModel, WellbeingLogModel, QAfterFilterCondition>
+      mindfulMinutesEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'mindfulMinutes',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<WellbeingLogModel, WellbeingLogModel, QAfterFilterCondition>
+      mindfulMinutesGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'mindfulMinutes',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<WellbeingLogModel, WellbeingLogModel, QAfterFilterCondition>
+      mindfulMinutesLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'mindfulMinutes',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<WellbeingLogModel, WellbeingLogModel, QAfterFilterCondition>
+      mindfulMinutesBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'mindfulMinutes',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<WellbeingLogModel, WellbeingLogModel, QAfterFilterCondition>
       moodRatingEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
@@ -643,6 +708,20 @@ extension WellbeingLogModelQuerySortBy
   }
 
   QueryBuilder<WellbeingLogModel, WellbeingLogModel, QAfterSortBy>
+      sortByMindfulMinutes() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'mindfulMinutes', Sort.asc);
+    });
+  }
+
+  QueryBuilder<WellbeingLogModel, WellbeingLogModel, QAfterSortBy>
+      sortByMindfulMinutesDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'mindfulMinutes', Sort.desc);
+    });
+  }
+
+  QueryBuilder<WellbeingLogModel, WellbeingLogModel, QAfterSortBy>
       sortByMoodRating() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'moodRating', Sort.asc);
@@ -715,6 +794,20 @@ extension WellbeingLogModelQuerySortThenBy
   }
 
   QueryBuilder<WellbeingLogModel, WellbeingLogModel, QAfterSortBy>
+      thenByMindfulMinutes() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'mindfulMinutes', Sort.asc);
+    });
+  }
+
+  QueryBuilder<WellbeingLogModel, WellbeingLogModel, QAfterSortBy>
+      thenByMindfulMinutesDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'mindfulMinutes', Sort.desc);
+    });
+  }
+
+  QueryBuilder<WellbeingLogModel, WellbeingLogModel, QAfterSortBy>
       thenByMoodRating() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'moodRating', Sort.asc);
@@ -767,6 +860,13 @@ extension WellbeingLogModelQueryWhereDistinct
   }
 
   QueryBuilder<WellbeingLogModel, WellbeingLogModel, QDistinct>
+      distinctByMindfulMinutes() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'mindfulMinutes');
+    });
+  }
+
+  QueryBuilder<WellbeingLogModel, WellbeingLogModel, QDistinct>
       distinctByMoodRating() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'moodRating');
@@ -799,6 +899,13 @@ extension WellbeingLogModelQueryProperty
   QueryBuilder<WellbeingLogModel, DateTime, QQueryOperations> dateProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'date');
+    });
+  }
+
+  QueryBuilder<WellbeingLogModel, int, QQueryOperations>
+      mindfulMinutesProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'mindfulMinutes');
     });
   }
 

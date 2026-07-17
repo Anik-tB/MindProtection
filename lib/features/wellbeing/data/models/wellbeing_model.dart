@@ -12,6 +12,8 @@ class WellbeingLogModel {
 
   late int moodRating; // 1 to 5 scale
 
+  late int mindfulMinutes = 0;
+
   @Index()
   late DateTime date;
 }
