@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="accessibility_service_description">Monitors active applications and website URLs to enforce study lockouts and block prohibited content.</string>
+    <string name="device_admin_description">Secures your study sessions, prevents uninstallation during Deep Focus, and allows emergency device locking.</string>
+</resources>

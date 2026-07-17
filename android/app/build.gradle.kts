@@ -6,7 +6,7 @@ plugins {
 
 android {
     namespace = "com.mindprotection.mind_protection"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
     compileOptions {

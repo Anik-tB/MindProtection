@@ -1,26 +1,17 @@
-allprojects {
-    repositories {
-        google()
-        mavenCentral()
+val newBuildDir = rootProject.layout.buildDirectory.dir("../../build").get()
+rootProject.layout.buildDirectory.set(newBuildDir)
+
+subprojects {
+    val newSubprojectBuildDir = newBuildDir.dir(project.name)
+    project.layout.buildDirectory.set(newSubprojectBuildDir)
+
+    if (project.name != "app") {
+        project.evaluationDependsOn(":app")
     }
 }
 
-val newBuildDir: Directory =
-    rootProject.layout.buildDirectory
-        .dir("../../build")
-        .get()
-rootProject.layout.buildDirectory.value(newBuildDir)
-
 subprojects {
-    val newSubprojectBuildDir: Directory = newBuildDir.dir(project.name)
-    project.layout.buildDirectory.value(newSubprojectBuildDir)
-}
-subprojects {
-    project.evaluationDependsOn(":app")
-}
-
-subprojects {
-    afterEvaluate {
+    val configureNamespace = {
         if (project.hasProperty("android")) {
             val android = project.property("android")
             try {
@@ -31,8 +22,33 @@ subprojects {
                     setNamespace?.invoke(android, "dev.isar.${project.name.replace("-", "_")}")
                 }
             } catch (e: Exception) {
-                // Ignore exception if property or method is missing
+                // Ignore exception
             }
+
+            try {
+                val compileSdkVersionMethod = android?.javaClass?.getMethod("compileSdkVersion", Int::class.javaPrimitiveType)
+                compileSdkVersionMethod?.invoke(android, 36)
+            } catch (e1: Exception) {
+                try {
+                    val setCompileSdk = android?.javaClass?.getMethod("setCompileSdk", java.lang.Integer::class.java)
+                    setCompileSdk?.invoke(android, 36)
+                } catch (e2: Exception) {
+                    try {
+                        val setCompileSdkInt = android?.javaClass?.getMethod("setCompileSdk", Int::class.javaPrimitiveType)
+                        setCompileSdkInt?.invoke(android, 36)
+                    } catch (e3: Exception) {
+                        // Ignore
+                    }
+                }
+            }
+        }
+    }
+
+    if (project.state.executed) {
+        configureNamespace()
+    } else {
+        project.afterEvaluate {
+            configureNamespace()
         }
     }
 }
@@ -40,3 +56,4 @@ subprojects {
 tasks.register<Delete>("clean") {
     delete(rootProject.layout.buildDirectory)
 }
+
