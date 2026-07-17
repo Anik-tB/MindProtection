@@ -83,6 +83,7 @@ class _BreathingExercisesViewState extends ConsumerState<BreathingExercisesView>
   }
 
   void _selectTechnique(int index) {
+    if (_hapticsEnabled) HapticFeedback.lightImpact();
     if (_isPlaying) _stopExercise();
     setState(() {
       _selectedTechniqueIndex = index;
@@ -93,6 +94,7 @@ class _BreathingExercisesViewState extends ConsumerState<BreathingExercisesView>
   }
 
   void _toggleExercise() {
+    if (_hapticsEnabled) HapticFeedback.heavyImpact();
     if (_isPlaying) {
       _stopExercise();
     } else {

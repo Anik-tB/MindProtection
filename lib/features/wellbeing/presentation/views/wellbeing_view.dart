@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -22,6 +23,7 @@ class _WellbeingViewState extends ConsumerState<WellbeingView> {
   bool _isEyeCareRunning = false;
 
   void _toggleEyeCare() {
+    HapticFeedback.mediumImpact();
     if (_isEyeCareRunning) {
       _eyeCareTimer?.cancel();
       setState(() {
@@ -96,9 +98,19 @@ class _WellbeingViewState extends ConsumerState<WellbeingView> {
           TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('Cancel')),
           ElevatedButton(
             onPressed: () async {
+              HapticFeedback.mediumImpact();
               final hours = double.tryParse(controller.text) ?? 8.0;
               await ref.read(wellbeingNotifierProvider.notifier).updateSleep(hours);
-              if (ctx.mounted) Navigator.of(ctx).pop();
+              if (ctx.mounted) {
+                Navigator.of(ctx).pop();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Sleep logged ($hours hrs). Rest is fuel for focus!'),
+                    backgroundColor: AppTheme.secondary,
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              }
             },
             child: const Text('Save'),
           ),
@@ -146,8 +158,10 @@ class _WellbeingViewState extends ConsumerState<WellbeingView> {
               const SizedBox(height: 12),
               _HydrationCard(
                 waterIntake: waterIntake,
-                onAddWater: (liters) =>
-                    ref.read(wellbeingNotifierProvider.notifier).addWater(liters),
+                onAddWater: (liters) {
+                  HapticFeedback.lightImpact();
+                  ref.read(wellbeingNotifierProvider.notifier).addWater(liters);
+                },
               ),
               const SizedBox(height: 22),
               const SectionTitle(title: 'Sleep and mood'),
@@ -157,15 +171,28 @@ class _WellbeingViewState extends ConsumerState<WellbeingView> {
                   Expanded(
                     child: _SleepCard(
                       sleepHours: sleepHours,
-                      onTap: () => _showSleepDialog(context, sleepHours),
+                      onTap: () {
+                        HapticFeedback.lightImpact();
+                        _showSleepDialog(context, sleepHours);
+                      },
                     ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: _MoodCard(
                       mood: mood,
-                      onMoodSelected: (rating) =>
-                          ref.read(wellbeingNotifierProvider.notifier).logMood(rating),
+                      onMoodSelected: (rating) {
+                        HapticFeedback.mediumImpact();
+                        ref.read(wellbeingNotifierProvider.notifier).logMood(rating);
+                        final moodText = _MoodCard.labels[rating - 1];
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Mood logged: $moodText. +10 XP for self-awareness!'),
+                            backgroundColor: AppTheme.accent.withValues(alpha: 0.95),
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                      },
                     ),
                   ),
                 ],
@@ -183,9 +210,12 @@ class _WellbeingViewState extends ConsumerState<WellbeingView> {
               const SectionTitle(title: 'Mindfulness'),
               const SizedBox(height: 12),
               _BreathingCard(
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const BreathingExercisesView()),
-                ),
+                onTap: () {
+                  HapticFeedback.lightImpact();
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const BreathingExercisesView()),
+                  );
+                },
               ),
             ],
           ),
