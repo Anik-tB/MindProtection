@@ -38,14 +38,22 @@ class HabitListNotifier extends _$HabitListNotifier {
     await _repository.addHabit(habit);
   }
 
-  Future<void> completeHabit(int id) async {
-    await _repository.completeHabit(id);
+  Future<int> completeHabit(int id) async {
+    final newStreak = await _repository.completeHabit(id);
 
     // Reward XP and Coins on completing a habit
     final gamificationNotifier = ref.read(gamificationProvider.notifier);
     await gamificationNotifier.addXp(15); // +15 XP
     await gamificationNotifier.addCoins(5); // +5 Coins
     await gamificationNotifier.incrementHabitStreak();
+
+    // Bonus rewards on milestone streaks (3, 7, 14, 30 days)
+    if ([3, 7, 14, 30, 60, 100].contains(newStreak)) {
+      await gamificationNotifier.addXp(newStreak * 5); // extra bonus XP
+      await gamificationNotifier.addCoins(newStreak * 2); // extra bonus Coins
+    }
+
+    return newStreak;
   }
 
   Future<void> deleteHabit(int id) async {

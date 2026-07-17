@@ -56,9 +56,9 @@ class HabitRepositoryImpl implements HabitRepository {
   }
 
   @override
-  Future<void> completeHabit(int id) async {
+  Future<int> completeHabit(int id) async {
     final habit = await _isar.habitModels.get(id);
-    if (habit == null) return;
+    if (habit == null) return 0;
 
     final now = DateTime.now();
     final history = List<DateTime>.from(habit.completionHistory ?? []);
@@ -100,7 +100,9 @@ class HabitRepositoryImpl implements HabitRepository {
         await _isar.habitModels.put(habit);
       });
       await _syncHabitToCloud(habit);
+      return newStreak;
     }
+    return habit.currentStreak;
   }
 
   @override

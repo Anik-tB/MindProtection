@@ -6,6 +6,6 @@ abstract class HabitRepository {
   Future<void> addHabit(HabitModel habit);
   Future<void> updateHabit(HabitModel habit);
   Future<void> deleteHabit(int id);
-  Future<void> completeHabit(int id);
+  Future<int> completeHabit(int id);
   Future<void> syncWithCloud();
 }
