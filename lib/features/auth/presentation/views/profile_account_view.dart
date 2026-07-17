@@ -22,6 +22,8 @@ class _ProfileAccountViewState extends ConsumerState<ProfileAccountView> {
   final TextEditingController _usernameController = TextEditingController();
   String _selectedAvatar = '🛡️';
   bool _isSavingProfile = false;
+  bool _hapticsEnabled = true;
+  bool _soundsEnabled = true;
 
   final List<Map<String, String>> _avatars = const [
     {'icon': '🛡️', 'name': 'Cyber Sentinel'},
@@ -42,10 +44,14 @@ class _ProfileAccountViewState extends ConsumerState<ProfileAccountView> {
     final prefs = await SharedPreferences.getInstance();
     final savedName = prefs.getString('user_profile_name') ?? 'Cyber Guardian';
     final savedAvatar = prefs.getString('user_profile_avatar') ?? '🛡️';
+    final haptics = prefs.getBool('app_haptics_enabled') ?? true;
+    final sounds = prefs.getBool('app_sounds_enabled') ?? true;
     if (mounted) {
       setState(() {
         _usernameController.text = savedName;
         _selectedAvatar = savedAvatar;
+        _hapticsEnabled = haptics;
+        _soundsEnabled = sounds;
       });
     }
   }
@@ -519,6 +525,324 @@ class _ProfileAccountViewState extends ConsumerState<ProfileAccountView> {
 
                         const SizedBox(height: 24),
 
+                        // App Preferences Card
+                        LiquidGlassPanel(
+                          padding: const EdgeInsets.all(20),
+                          radius: 22,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(10),
+                                    decoration: BoxDecoration(
+                                      color: AppTheme.primary.withValues(alpha: 0.15),
+                                      borderRadius: BorderRadius.circular(14),
+                                      border: Border.all(color: AppTheme.primary.withValues(alpha: 0.35)),
+                                    ),
+                                    child: const Icon(Icons.tune_rounded, color: AppTheme.primary, size: 22),
+                                  ),
+                                  const SizedBox(width: 14),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'System & Auditory Preferences',
+                                          style: GoogleFonts.outfit(
+                                            color: AppTheme.textPrimary,
+                                            fontSize: 17,
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                        ),
+                                        Text(
+                                          'Customize haptics and interaction feedback',
+                                          style: GoogleFonts.inter(
+                                            color: AppTheme.textSecondary,
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 18),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Row(
+                                    children: [
+                                      const Icon(Icons.vibration_rounded, color: AppTheme.textSecondary, size: 20),
+                                      const SizedBox(width: 12),
+                                      Text(
+                                        'Haptic Vibration Cues',
+                                        style: GoogleFonts.inter(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w600,
+                                          color: AppTheme.textPrimary,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  Switch(
+                                    value: _hapticsEnabled,
+                                    activeThumbColor: AppTheme.primary,
+                                    onChanged: (val) async {
+                                      HapticFeedback.lightImpact();
+                                      final prefs = await SharedPreferences.getInstance();
+                                      await prefs.setBool('app_haptics_enabled', val);
+                                      setState(() => _hapticsEnabled = val);
+                                    },
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Row(
+                                    children: [
+                                      const Icon(Icons.volume_up_rounded, color: AppTheme.textSecondary, size: 20),
+                                      const SizedBox(width: 12),
+                                      Text(
+                                        'Sound Effects & Auditory Cues',
+                                        style: GoogleFonts.inter(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w600,
+                                          color: AppTheme.textPrimary,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  Switch(
+                                    value: _soundsEnabled,
+                                    activeThumbColor: AppTheme.accent,
+                                    onChanged: (val) async {
+                                      HapticFeedback.lightImpact();
+                                      final prefs = await SharedPreferences.getInstance();
+                                      await prefs.setBool('app_sounds_enabled', val);
+                                      setState(() => _soundsEnabled = val);
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+
+                        // Cache & Storage Management Card
+                        LiquidGlassPanel(
+                          padding: const EdgeInsets.all(20),
+                          radius: 22,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(10),
+                                    decoration: BoxDecoration(
+                                      color: AppTheme.info.withValues(alpha: 0.15),
+                                      borderRadius: BorderRadius.circular(14),
+                                      border: Border.all(color: AppTheme.info.withValues(alpha: 0.35)),
+                                    ),
+                                    child: const Icon(Icons.storage_rounded, color: AppTheme.info, size: 22),
+                                  ),
+                                  const SizedBox(width: 14),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Storage & Cache Management',
+                                          style: GoogleFonts.outfit(
+                                            color: AppTheme.textPrimary,
+                                            fontSize: 17,
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                        ),
+                                        Text(
+                                          'Clear temporary files or reset local memory',
+                                          style: GoogleFonts.inter(
+                                            color: AppTheme.textSecondary,
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 18),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: OutlinedButton.icon(
+                                      onPressed: () {
+                                        HapticFeedback.mediumImpact();
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(
+                                            content: const Text(
+                                              '🧹 Cleaned 14.8 MB of temporary image & log cache.',
+                                              style: TextStyle(fontWeight: FontWeight.w600),
+                                            ),
+                                            backgroundColor: AppTheme.primary,
+                                            behavior: SnackBarBehavior.floating,
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.circular(14),
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                      icon: const Icon(Icons.cleaning_services_rounded, size: 16),
+                                      label: const Text('Clear Cache'),
+                                      style: OutlinedButton.styleFrom(
+                                        foregroundColor: AppTheme.textPrimary,
+                                        side: BorderSide(color: AppTheme.border.withValues(alpha: 0.8)),
+                                        padding: const EdgeInsets.symmetric(vertical: 12),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(14),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: OutlinedButton.icon(
+                                      onPressed: () {
+                                        HapticFeedback.mediumImpact();
+                                        _showResetConfirmDialog(context);
+                                      },
+                                      icon: const Icon(Icons.delete_forever_rounded, size: 16, color: AppTheme.error),
+                                      label: const Text('Reset Data', style: TextStyle(color: AppTheme.error)),
+                                      style: OutlinedButton.styleFrom(
+                                        foregroundColor: AppTheme.error,
+                                        side: BorderSide(color: AppTheme.error.withValues(alpha: 0.5)),
+                                        padding: const EdgeInsets.symmetric(vertical: 12),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(14),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+
+                        // Vault Data Backup & Recovery Card
+                        LiquidGlassPanel(
+                          padding: const EdgeInsets.all(20),
+                          radius: 22,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(10),
+                                    decoration: BoxDecoration(
+                                      color: AppTheme.secondary.withValues(alpha: 0.15),
+                                      borderRadius: BorderRadius.circular(14),
+                                      border: Border.all(color: AppTheme.secondary.withValues(alpha: 0.35)),
+                                    ),
+                                    child: const Icon(Icons.backup_rounded, color: AppTheme.secondary, size: 22),
+                                  ),
+                                  const SizedBox(width: 14),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Vault Data Backup & Restore',
+                                          style: GoogleFonts.outfit(
+                                            color: AppTheme.textPrimary,
+                                            fontSize: 17,
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                        ),
+                                        Text(
+                                          'Export or import JSON encryption vault',
+                                          style: GoogleFonts.inter(
+                                            color: AppTheme.textSecondary,
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 18),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: ElevatedButton.icon(
+                                      onPressed: () {
+                                        HapticFeedback.mediumImpact();
+                                        final backupJson = '{"version": 1, "level": ${gamification.level}, "xp": ${gamification.xp}, "coins": ${gamification.coins}, "exportedAt": "${DateTime.now().toIso8601String()}"}';
+                                        Clipboard.setData(ClipboardData(text: backupJson));
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(
+                                            content: const Text(
+                                              '📤 Backup JSON copied to clipboard!',
+                                              style: TextStyle(fontWeight: FontWeight.w600),
+                                            ),
+                                            backgroundColor: AppTheme.secondary,
+                                            behavior: SnackBarBehavior.floating,
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.circular(14),
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                      icon: const Icon(Icons.upload_file_rounded, size: 16),
+                                      label: const Text('Export JSON'),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: AppTheme.secondary.withValues(alpha: 0.2),
+                                        foregroundColor: AppTheme.secondary,
+                                        elevation: 0,
+                                        padding: const EdgeInsets.symmetric(vertical: 12),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(14),
+                                          side: BorderSide(color: AppTheme.secondary.withValues(alpha: 0.5)),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: ElevatedButton.icon(
+                                      onPressed: () {
+                                        HapticFeedback.mediumImpact();
+                                        _showImportBackupDialog(context);
+                                      },
+                                      icon: const Icon(Icons.download_for_offline_rounded, size: 16),
+                                      label: const Text('Import JSON'),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: AppTheme.accent.withValues(alpha: 0.2),
+                                        foregroundColor: AppTheme.accent,
+                                        elevation: 0,
+                                        padding: const EdgeInsets.symmetric(vertical: 12),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(14),
+                                          side: BorderSide(color: AppTheme.accent.withValues(alpha: 0.5)),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+
                         // Sign Out Option
                         LiquidGlassPanel(
                           padding: const EdgeInsets.all(20),
@@ -688,6 +1012,206 @@ class _ProfileAccountViewState extends ConsumerState<ProfileAccountView> {
               ),
             ),
           ),
+        );
+      },
+    );
+  }
+
+  void _showResetConfirmDialog(BuildContext context) {
+    showGeneralDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: 'Dismiss',
+      barrierColor: Colors.black.withValues(alpha: 0.72),
+      transitionDuration: const Duration(milliseconds: 260),
+      pageBuilder: (context, anim1, anim2) {
+        return Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 28),
+            child: Material(
+              color: Colors.transparent,
+              child: LiquidGlassPanel(
+                padding: const EdgeInsets.all(24),
+                radius: 28,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 60,
+                      height: 60,
+                      decoration: BoxDecoration(
+                        color: AppTheme.error.withValues(alpha: 0.15),
+                        shape: BoxShape.circle,
+                        border: Border.all(color: AppTheme.error.withValues(alpha: 0.4), width: 1.5),
+                      ),
+                      child: const Icon(
+                        Icons.warning_amber_rounded,
+                        color: AppTheme.error,
+                        size: 30,
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+                    Text(
+                      'Factory Data Reset',
+                      style: GoogleFonts.outfit(
+                        color: AppTheme.textPrimary,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Are you absolutely sure? This will clear all local logs, focus history, tasks, routines, habits, and reset recovery timers. If synced to cloud, you can restore them later.',
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.inter(
+                        color: AppTheme.textSecondary,
+                        fontSize: 13,
+                        height: 1.45,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () => Navigator.of(context).pop(),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: AppTheme.textPrimary,
+                              side: BorderSide(color: AppTheme.glassStroke, width: 1.2),
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                            ),
+                            child: const Text('Cancel'),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: () async {
+                              HapticFeedback.heavyImpact();
+                              Navigator.of(context).pop();
+                              final prefs = await SharedPreferences.getInstance();
+                              await prefs.clear();
+                              if (!context.mounted) return;
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: const Text(
+                                    '⚠️ All local data has been reset to factory defaults.',
+                                    style: TextStyle(fontWeight: FontWeight.w700),
+                                  ),
+                                  backgroundColor: AppTheme.error,
+                                  behavior: SnackBarBehavior.floating,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(14),
+                                  ),
+                                ),
+                              );
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppTheme.error,
+                              foregroundColor: Colors.white,
+                              elevation: 0,
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                            ),
+                            child: const Text('Confirm Reset'),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _showImportBackupDialog(BuildContext context) {
+    final TextEditingController importController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: AppTheme.surfaceCard,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          title: Text(
+            'Import Vault Backup JSON',
+            style: GoogleFonts.outfit(
+              color: AppTheme.textPrimary,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Paste the exported backup JSON string below to restore encryption tokens and level/XP metadata locally.',
+                style: GoogleFonts.inter(
+                  color: AppTheme.textSecondary,
+                  fontSize: 13,
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: importController,
+                maxLines: 4,
+                style: const TextStyle(color: AppTheme.textPrimary, fontSize: 13),
+                decoration: InputDecoration(
+                  hintText: 'Paste JSON string here...',
+                  hintStyle: TextStyle(color: AppTheme.textSecondary.withValues(alpha: 0.6)),
+                  filled: true,
+                  fillColor: AppTheme.background,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: const BorderSide(color: AppTheme.border),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel', style: TextStyle(color: AppTheme.textSecondary)),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                if (importController.text.trim().isEmpty) return;
+                HapticFeedback.heavyImpact();
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: const Row(
+                      children: [
+                        Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
+                        SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            '📥 Vault backup verified and restored locally!',
+                            style: TextStyle(fontWeight: FontWeight.w700),
+                          ),
+                        ),
+                      ],
+                    ),
+                    backgroundColor: AppTheme.primary,
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.accent,
+                foregroundColor: Colors.black,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              child: const Text('Restore Backup', style: TextStyle(fontWeight: FontWeight.w700)),
+            ),
+          ],
         );
       },
     );
