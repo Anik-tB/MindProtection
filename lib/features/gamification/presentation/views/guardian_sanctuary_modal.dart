@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/ui/liquid_glass.dart';
@@ -8,6 +9,7 @@ class GuardianSanctuaryModal extends ConsumerStatefulWidget {
   const GuardianSanctuaryModal({super.key});
 
   static void show(BuildContext context) {
+    HapticFeedback.mediumImpact();
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -39,6 +41,7 @@ class _GuardianSanctuaryModalState extends ConsumerState<GuardianSanctuaryModal>
 
   void _purchaseItem(String title, int cost) async {
     if (_unlockedRewards.contains(title)) {
+      HapticFeedback.lightImpact();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('$title is already active in your sanctuary!'),
@@ -52,6 +55,7 @@ class _GuardianSanctuaryModalState extends ConsumerState<GuardianSanctuaryModal>
     if (!mounted) return;
 
     if (success) {
+      HapticFeedback.heavyImpact();
       setState(() {
         _unlockedRewards.add(title);
       });
@@ -76,6 +80,7 @@ class _GuardianSanctuaryModalState extends ConsumerState<GuardianSanctuaryModal>
         ),
       );
     } else {
+      HapticFeedback.vibrate();
       final needed = cost - ref.read(gamificationProvider).coins;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -186,6 +191,7 @@ class _GuardianSanctuaryModalState extends ConsumerState<GuardianSanctuaryModal>
               child: TabBar(
                 controller: _tabController,
                 indicatorSize: TabBarIndicatorSize.tab,
+                onTap: (_) => HapticFeedback.selectionClick(),
                 tabs: const [
                   Tab(
                     icon: Icon(Icons.emoji_events_rounded, size: 18),
