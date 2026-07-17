@@ -144,7 +144,7 @@ class _WellbeingViewState extends ConsumerState<WellbeingView> {
       body: SafeArea(
         bottom: false,
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 110),
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 145),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -166,36 +166,28 @@ class _WellbeingViewState extends ConsumerState<WellbeingView> {
               const SizedBox(height: 22),
               const SectionTitle(title: 'Sleep and mood'),
               const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: _SleepCard(
-                      sleepHours: sleepHours,
-                      onTap: () {
-                        HapticFeedback.lightImpact();
-                        _showSleepDialog(context, sleepHours);
-                      },
+              _SleepCard(
+                sleepHours: sleepHours,
+                onTap: () {
+                  HapticFeedback.lightImpact();
+                  _showSleepDialog(context, sleepHours);
+                },
+              ),
+              const SizedBox(height: 12),
+              _MoodCard(
+                mood: mood,
+                onMoodSelected: (rating) {
+                  HapticFeedback.mediumImpact();
+                  ref.read(wellbeingNotifierProvider.notifier).logMood(rating);
+                  final moodText = _MoodCard.labels[rating - 1];
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Mood logged: $moodText. +10 XP for self-awareness!'),
+                      backgroundColor: AppTheme.accent.withValues(alpha: 0.95),
+                      behavior: SnackBarBehavior.floating,
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _MoodCard(
-                      mood: mood,
-                      onMoodSelected: (rating) {
-                        HapticFeedback.mediumImpact();
-                        ref.read(wellbeingNotifierProvider.notifier).logMood(rating);
-                        final moodText = _MoodCard.labels[rating - 1];
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Mood logged: $moodText. +10 XP for self-awareness!'),
-                            backgroundColor: AppTheme.accent.withValues(alpha: 0.95),
-                            behavior: SnackBarBehavior.floating,
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ],
+                  );
+                },
               ),
               const SizedBox(height: 22),
               const SectionTitle(title: 'Eye care'),
@@ -322,16 +314,41 @@ class _WaterButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return filled
-        ? GradientActionButton(
-            label: label,
-            expanded: true,
-            onPressed: onTap,
-          )
-        : OutlinedButton(
-            onPressed: onTap,
-            child: Text(label),
-          );
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 220),
+          height: 48,
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            gradient: filled ? AppTheme.primaryGradient : null,
+            color: filled ? null : AppTheme.surfaceRaised,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: filled ? AppTheme.primary : AppTheme.border,
+              width: 1.2,
+            ),
+            boxShadow: filled ? AppTheme.primaryGlow : null,
+          ),
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              label,
+              maxLines: 1,
+              style: GoogleFonts.inter(
+                color: filled ? AppTheme.onPrimary : AppTheme.textPrimary,
+                fontWeight: FontWeight.w800,
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
 
@@ -347,30 +364,43 @@ class _SleepCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return LiquidGlassPanel(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(18),
       onTap: onTap,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
           const LiquidIconBadge(
-            icon: Icons.bedtime_rounded,
+            icon: Icons.nightlight_round,
             color: AppTheme.secondary,
-            size: 40,
-            iconSize: 19,
           ),
-          const SizedBox(height: 14),
-          Text('Sleep', style: Theme.of(context).textTheme.bodyMedium),
-          const SizedBox(height: 4),
-          Text(
-            sleepHours > 0 ? '${sleepHours.toStringAsFixed(1)}h' : 'Unset',
-            style: GoogleFonts.outfit(
-              color: AppTheme.secondary,
-              fontSize: 28,
-              fontWeight: FontWeight.w900,
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Sleep duration', style: Theme.of(context).textTheme.titleMedium),
+                const SizedBox(height: 3),
+                Text(
+                  sleepHours > 0 ? '${sleepHours.toStringAsFixed(1)} hours logged' : 'No sleep logged today',
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 4),
-          Text('Goal: 7-9 hrs', style: Theme.of(context).textTheme.bodySmall),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                sleepHours > 0 ? '${sleepHours.toStringAsFixed(1)}h' : 'Unset',
+                style: GoogleFonts.outfit(
+                  color: AppTheme.secondary,
+                  fontWeight: FontWeight.w900,
+                  fontSize: 26,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text('Goal: 7-9 hrs', style: Theme.of(context).textTheme.bodySmall),
+            ],
+          ),
         ],
       ),
     );
@@ -400,58 +430,104 @@ class _MoodCard extends StatelessWidget {
     final safeMood = mood.clamp(1, 5);
 
     return LiquidGlassPanel(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(18),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const LiquidIconBadge(
-            icon: Icons.wb_sunny_rounded,
-            color: AppTheme.accent,
-            size: 40,
-            iconSize: 19,
-          ),
-          const SizedBox(height: 14),
-          Text('Mood', style: Theme.of(context).textTheme.bodyMedium),
-          const SizedBox(height: 10),
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const LiquidIconBadge(
+                icon: Icons.wb_sunny_rounded,
+                color: AppTheme.accent,
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Mood tracking', style: Theme.of(context).textTheme.titleMedium),
+                    const SizedBox(height: 3),
+                    Text(
+                      'Log how you feel throughout the day.',
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                  ],
+                ),
+              ),
+              Text(
+                labels[safeMood - 1],
+                style: GoogleFonts.outfit(
+                  color: AppTheme.accent,
+                  fontWeight: FontWeight.w900,
+                  fontSize: 22,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 18),
+          Row(
             children: List.generate(5, (index) {
               final rating = index + 1;
               final isSelected = safeMood == rating;
-              return InkWell(
-                borderRadius: BorderRadius.circular(12),
-                onTap: () => onMoodSelected(rating),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 180),
-                  padding: const EdgeInsets.all(6),
-                  decoration: BoxDecoration(
-                    color: isSelected
-                        ? AppTheme.accent.withValues(alpha: 0.16)
-                        : Colors.transparent,
-                    borderRadius: BorderRadius.circular(12),
-                    border: isSelected
-                        ? Border.all(color: AppTheme.accent.withValues(alpha: 0.35))
-                        : null,
-                  ),
-                  child: Icon(
-                    icons[index],
-                    color: isSelected ? AppTheme.accent : AppTheme.textHint,
-                    size: isSelected ? 23 : 20,
+              return Expanded(
+                child: Padding(
+                  padding: EdgeInsets.only(right: index < 4 ? 8.0 : 0.0),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(16),
+                      onTap: () => onMoodSelected(rating),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? AppTheme.accent.withValues(alpha: 0.18)
+                              : AppTheme.surfaceRaised,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: isSelected
+                                ? AppTheme.accent
+                                : AppTheme.border,
+                            width: isSelected ? 1.4 : 1.0,
+                          ),
+                          boxShadow: isSelected
+                              ? [
+                                  BoxShadow(
+                                    color: AppTheme.accent.withValues(alpha: 0.25),
+                                    blurRadius: 12,
+                                  )
+                                ]
+                              : null,
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              icons[index],
+                              color: isSelected ? AppTheme.accent : AppTheme.textSecondary,
+                              size: isSelected ? 26 : 22,
+                            ),
+                            const SizedBox(height: 4),
+                            FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(
+                                labels[index],
+                                style: GoogleFonts.inter(
+                                  fontSize: 11,
+                                  fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                                  color: isSelected ? AppTheme.accent : AppTheme.textSecondary,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               );
             }),
-          ),
-          const SizedBox(height: 9),
-          Center(
-            child: Text(
-              labels[safeMood - 1],
-              style: GoogleFonts.inter(
-                color: AppTheme.accent,
-                fontWeight: FontWeight.w900,
-                fontSize: 12,
-              ),
-            ),
           ),
         ],
       ),
@@ -498,6 +574,8 @@ class _EyeCareCard extends StatelessWidget {
                   isRunning
                       ? '${formatDuration(secondsRemaining)} remaining'
                       : 'Look 20 feet away after 20 minutes.',
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: isRunning ? AppTheme.info : AppTheme.textSecondary,
                         fontWeight: isRunning ? FontWeight.w800 : FontWeight.w500,
