@@ -5,6 +5,8 @@ import 'package:google_fonts/google_fonts.dart';
 import '../viewmodels/recovery_notifier.dart';
 import 'emergency_lock_overlay.dart';
 import '../../../blocking/data/services/android_blocking_service.dart';
+import '../../../blocking/presentation/views/app_blocker_view.dart';
+import '../../../blocking/presentation/viewmodels/app_blocker_notifier.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/network/supabase_auth_service.dart';
 
@@ -444,6 +446,10 @@ class _RecoveryViewState extends ConsumerState<RecoveryView>
               ),
               const SizedBox(height: 24),
 
+              // ── Active App Blocker Card ─────────────────────────────────
+              const _AppBlockerEntryCard(),
+              const SizedBox(height: 24),
+
               // ── Guard Toggles ───────────────────────────────────────────
               _SectionLabel(title: 'Blocking Guards'),
               const SizedBox(height: 12),
@@ -468,6 +474,10 @@ class _RecoveryViewState extends ConsumerState<RecoveryView>
                 onChanged: (value) {
                   HapticFeedback.mediumImpact();
                   recoveryNotifier.toggleShortsBlocker();
+                  if (value) {
+                    ref.read(appBlockerProvider.notifier).addCustomApp('com.zhiliaoapp.musically');
+                    ref.read(appBlockerProvider.notifier).addCustomApp('com.google.android.youtube');
+                  }
                 },
               ),
               const SizedBox(height: 10),
@@ -480,6 +490,11 @@ class _RecoveryViewState extends ConsumerState<RecoveryView>
                 onChanged: (value) {
                   HapticFeedback.mediumImpact();
                   recoveryNotifier.toggleAppLimiter();
+                  if (value) {
+                    ref.read(appBlockerProvider.notifier).addCustomApp('com.instagram.android');
+                    ref.read(appBlockerProvider.notifier).addCustomApp('com.twitter.android');
+                    ref.read(appBlockerProvider.notifier).addCustomApp('com.facebook.katana');
+                  }
                 },
               ),
               const SizedBox(height: 24),
@@ -570,6 +585,103 @@ class _RecoveryViewState extends ConsumerState<RecoveryView>
               const _AccountSecurityCard(),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Active App Blocker Entry Card ──────────────────────────────────────────
+class _AppBlockerEntryCard extends ConsumerWidget {
+  const _AppBlockerEntryCard();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final blockedAsync = ref.watch(appBlockerProvider);
+    final count = blockedAsync.value?.length ?? 0;
+
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.lightImpact();
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const AppBlockerView()),
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: AppTheme.surfaceCard,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: AppTheme.borderAccent),
+          boxShadow: AppTheme.cardShadow,
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppTheme.primary.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: AppTheme.primary.withValues(alpha: 0.35)),
+              ),
+              child: const Icon(Icons.shield_rounded, color: AppTheme.primary, size: 26),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Text(
+                        'App Blocker Engine',
+                        style: GoogleFonts.outfit(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: AppTheme.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: count > 0
+                              ? AppTheme.error.withValues(alpha: 0.15)
+                              : AppTheme.surfaceRaised,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: count > 0
+                                ? AppTheme.error.withValues(alpha: 0.4)
+                                : AppTheme.border,
+                          ),
+                        ),
+                        child: Text(
+                          count > 0 ? '$count RESTRICTED' : 'INACTIVE',
+                          style: GoogleFonts.inter(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w800,
+                            color: count > 0 ? AppTheme.error : AppTheme.textHint,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Configure specific social apps and games to intercept and lock during focus mode.',
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      color: AppTheme.textSecondary,
+                      height: 1.4,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 10),
+            const Icon(Icons.arrow_forward_ios_rounded, color: AppTheme.textHint, size: 16),
+          ],
         ),
       ),
     );

@@ -142,6 +142,20 @@ class FocusTimer extends _$FocusTimer {
     _timer?.cancel();
     state = state.copyWith(status: TimerStatus.running);
     AndroidBlockingService.setFocusActive(true);
+    if (state.isDeepFocus) {
+      AndroidBlockingService.getBlockedApps().then((list) {
+        if (list.isEmpty) {
+          const defaults = [
+            'com.instagram.android',
+            'com.zhiliaoapp.musically',
+            'com.google.android.youtube',
+            'com.twitter.android',
+            'com.facebook.katana',
+          ];
+          AndroidBlockingService.updateBlockedApps(defaults);
+        }
+      });
+    }
     _timer = Timer.periodic(const Duration(seconds: 1), _tick);
   }
 
@@ -156,6 +170,20 @@ class FocusTimer extends _$FocusTimer {
     if (state.status != TimerStatus.paused) return;
     state = state.copyWith(status: TimerStatus.running);
     AndroidBlockingService.setFocusActive(true);
+    if (state.isDeepFocus) {
+      AndroidBlockingService.getBlockedApps().then((list) {
+        if (list.isEmpty) {
+          const defaults = [
+            'com.instagram.android',
+            'com.zhiliaoapp.musically',
+            'com.google.android.youtube',
+            'com.twitter.android',
+            'com.facebook.katana',
+          ];
+          AndroidBlockingService.updateBlockedApps(defaults);
+        }
+      });
+    }
     _timer = Timer.periodic(const Duration(seconds: 1), _tick);
   }
 
