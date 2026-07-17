@@ -135,6 +135,7 @@ class _HabitTrackerViewState extends ConsumerState<HabitTrackerView> {
                   label: 'Start habit',
                   icon: Icons.check_rounded,
                   onPressed: () async {
+                    HapticFeedback.mediumImpact();
                     final title = titleController.text.trim();
                     if (title.isEmpty) return;
                     await ref.read(habitListNotifierProvider.notifier).addHabit(
@@ -248,9 +249,14 @@ class _ProtectorCard extends StatelessWidget {
     final targetXp = (stats.level * 100).clamp(100, 100000);
     final progress = (stats.xp / targetXp).clamp(0.0, 1.0);
 
-    return LiquidGlassPanel(
-      padding: const EdgeInsets.all(18),
-      child: Column(
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.mediumImpact();
+        GuardianSanctuaryModal.show(context);
+      },
+      child: LiquidGlassPanel(
+        padding: const EdgeInsets.all(18),
+        child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
@@ -304,6 +310,7 @@ class _ProtectorCard extends StatelessWidget {
           ),
         ],
       ),
+    ),
     );
   }
 }
@@ -341,6 +348,14 @@ class _HabitCard extends ConsumerWidget {
                         if ([3, 7, 14, 30, 60, 100].contains(newStreak) && context.mounted) {
                           HapticFeedback.heavyImpact();
                           _showMilestonePopup(context, habit.title, newStreak);
+                        } else if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Habit completed: +15 XP & +5 Coins! Keep the streak alive!'),
+                              backgroundColor: AppTheme.primaryDark,
+                              behavior: SnackBarBehavior.floating,
+                            ),
+                          );
                         }
                       },
                 child: AnimatedContainer(
@@ -416,8 +431,10 @@ class _HabitCard extends ConsumerWidget {
               tooltip: 'Delete habit',
               icon: const Icon(Icons.delete_outline_rounded),
               color: AppTheme.textHint,
-              onPressed: () =>
-                  ref.read(habitListNotifierProvider.notifier).deleteHabit(habit.id),
+              onPressed: () {
+                HapticFeedback.lightImpact();
+                ref.read(habitListNotifierProvider.notifier).deleteHabit(habit.id);
+              },
             ),
           ],
         ),
