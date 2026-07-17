@@ -172,7 +172,7 @@ class _HabitTrackerViewState extends ConsumerState<HabitTrackerView> {
       body: SafeArea(
         bottom: false,
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 110),
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 145),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

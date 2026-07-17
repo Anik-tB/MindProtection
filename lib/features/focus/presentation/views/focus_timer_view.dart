@@ -224,7 +224,7 @@ class _FocusTimerViewState extends ConsumerState<FocusTimerView> {
           child: Stack(
             children: [
               SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(20, 16, 20, 110),
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 145),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [

@@ -506,7 +506,7 @@ class _TasksTab extends ConsumerWidget {
               }
 
               return ListView.separated(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 110),
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 145),
                 itemCount: filteredTasks.length,
                 separatorBuilder: (context, index) => const SizedBox(height: 10),
                 itemBuilder: (context, index) {
@@ -641,7 +641,7 @@ class _RoutinesTab extends ConsumerWidget {
               final night = routines.where((r) => r.timeOfDay == 'Night').toList();
 
               return ListView(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 110),
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 145),
                 children: [
                   if (morning.isNotEmpty)
                     _RoutineCategory(
@@ -772,7 +772,7 @@ class _GoalsTab extends ConsumerWidget {
               }
 
               return ListView.separated(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 110),
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 145),
                 itemCount: goals.length,
                 separatorBuilder: (context, index) => const SizedBox(height: 10),
                 itemBuilder: (context, index) {

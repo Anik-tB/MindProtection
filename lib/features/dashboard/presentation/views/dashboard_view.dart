@@ -221,7 +221,7 @@ class _TodayTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(20, 2, 20, 110),
+      padding: const EdgeInsets.fromLTRB(20, 2, 20, 145),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

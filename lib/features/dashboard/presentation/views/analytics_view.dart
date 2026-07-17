@@ -40,7 +40,7 @@ class AnalyticsView extends ConsumerWidget {
         .toList();
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(20, 2, 20, 110),
+      padding: const EdgeInsets.fromLTRB(20, 2, 20, 145),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
