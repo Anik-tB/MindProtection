@@ -5,7 +5,6 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/ui/liquid_glass.dart';
-import '../../../../core/network/supabase_auth_service.dart';
 import '../../../focus/presentation/viewmodels/focus_timer_notifier.dart';
 import '../../../gamification/presentation/viewmodels/gamification_notifier.dart';
 import '../../../recovery/presentation/viewmodels/recovery_notifier.dart';
@@ -13,6 +12,7 @@ import '../../../wellbeing/presentation/viewmodels/wellbeing_notifier.dart';
 import '../../../gamification/presentation/views/guardian_sanctuary_modal.dart';
 import '../../../notifications/presentation/viewmodels/notification_notifier.dart';
 import '../../../notifications/presentation/views/notifications_reminders_view.dart';
+import '../../../auth/presentation/views/profile_account_view.dart';
 import 'analytics_view.dart';
 
 class DashboardView extends ConsumerWidget {
@@ -463,7 +463,10 @@ class _ProfileAccountButton extends ConsumerWidget {
     return GestureDetector(
       onTap: () {
         HapticFeedback.lightImpact();
-        _showProfileAccountModal(context, ref, level);
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const ProfileAccountView()),
+        );
       },
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
@@ -503,253 +506,6 @@ class _ProfileAccountButton extends ConsumerWidget {
           ],
         ),
       ),
-    );
-  }
-
-  void _showProfileAccountModal(BuildContext context, WidgetRef ref, int level) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (context) {
-        return Container(
-          padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
-          decoration: BoxDecoration(
-            color: AppTheme.surfaceCard,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-            border: Border.all(color: AppTheme.glassStroke, width: 1.2),
-            boxShadow: AppTheme.cardShadow,
-          ),
-          child: SafeArea(
-            top: false,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 44,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: AppTheme.textSecondary.withValues(alpha: 0.3),
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-                const SizedBox(height: 24),
-                Row(
-                  children: [
-                    Container(
-                      width: 58,
-                      height: 58,
-                      decoration: BoxDecoration(
-                        color: AppTheme.primary.withValues(alpha: 0.15),
-                        shape: BoxShape.circle,
-                        border: Border.all(color: AppTheme.primary.withValues(alpha: 0.4), width: 1.5),
-                      ),
-                      child: const Icon(Icons.shield_rounded, color: AppTheme.primary, size: 30),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Cyber Guardian',
-                            style: GoogleFonts.outfit(
-                              color: AppTheme.textPrimary,
-                              fontSize: 20,
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                          const SizedBox(height: 3),
-                          Text(
-                            'Level $level Protected Account',
-                            style: GoogleFonts.inter(
-                              color: AppTheme.primary,
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 24),
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: AppTheme.background.withValues(alpha: 0.5),
-                    borderRadius: BorderRadius.circular(18),
-                    border: Border.all(color: AppTheme.border),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.cloud_done_rounded, color: AppTheme.primary, size: 22),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Encrypted Cloud Sync',
-                              style: GoogleFonts.outfit(
-                                color: AppTheme.textPrimary,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              'All streaks and protection rules active',
-                              style: GoogleFonts.inter(
-                                color: AppTheme.textSecondary,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 28),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: () async {
-                      HapticFeedback.mediumImpact();
-                      Navigator.of(context).pop();
-                      _showLogoutConfirmDialog(context, ref);
-                    },
-                    icon: const Icon(Icons.logout_rounded, size: 19),
-                    label: const Text('Sign Out of Account'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.error.withValues(alpha: 0.16),
-                      foregroundColor: AppTheme.error,
-                      elevation: 0,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      side: BorderSide(color: AppTheme.error.withValues(alpha: 0.45), width: 1.2),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-                      textStyle: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w700),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  void _showLogoutConfirmDialog(BuildContext context, WidgetRef ref) {
-    showGeneralDialog(
-      context: context,
-      barrierDismissible: true,
-      barrierLabel: 'Dismiss',
-      barrierColor: Colors.black.withValues(alpha: 0.72),
-      transitionDuration: const Duration(milliseconds: 260),
-      pageBuilder: (context, anim1, anim2) {
-        return Center(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 28),
-            child: Material(
-              color: Colors.transparent,
-              child: LiquidGlassPanel(
-                padding: const EdgeInsets.all(24),
-                radius: 28,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 60,
-                      height: 60,
-                      decoration: BoxDecoration(
-                        color: AppTheme.error.withValues(alpha: 0.15),
-                        shape: BoxShape.circle,
-                        border: Border.all(color: AppTheme.error.withValues(alpha: 0.4), width: 1.5),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppTheme.error.withValues(alpha: 0.25),
-                            blurRadius: 16,
-                          ),
-                        ],
-                      ),
-                      child: const Icon(
-                        Icons.logout_rounded,
-                        color: AppTheme.error,
-                        size: 28,
-                      ),
-                    ),
-                    const SizedBox(height: 18),
-                    Text(
-                      'Sign Out of MindProtection?',
-                      textAlign: TextAlign.center,
-                      style: GoogleFonts.outfit(
-                        color: AppTheme.textPrimary,
-                        fontSize: 22,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Your streaks, guardian level, and daily focus sessions will remain synced to your cloud account.',
-                      textAlign: TextAlign.center,
-                      style: GoogleFonts.inter(
-                        color: AppTheme.textSecondary,
-                        fontSize: 13,
-                        height: 1.4,
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton(
-                            onPressed: () => Navigator.of(context).pop(),
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: AppTheme.textPrimary,
-                              side: BorderSide(color: AppTheme.glassStroke, width: 1.2),
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                            ),
-                            child: const Text('Cancel'),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: ElevatedButton(
-                            onPressed: () async {
-                              HapticFeedback.heavyImpact();
-                              Navigator.of(context).pop();
-                              await ref.read(authServiceProvider).signOut();
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppTheme.error,
-                              foregroundColor: Colors.white,
-                              elevation: 0,
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                            ),
-                            child: const Text('Sign Out'),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        );
-      },
-      transitionBuilder: (context, anim1, anim2, child) {
-        return ScaleTransition(
-          scale: Tween<double>(begin: 0.9, end: 1.0).animate(
-            CurvedAnimation(parent: anim1, curve: Curves.easeOutCubic),
-          ),
-          child: FadeTransition(opacity: anim1, child: child),
-        );
-      },
     );
   }
 }

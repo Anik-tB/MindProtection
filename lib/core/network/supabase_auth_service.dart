@@ -44,6 +44,16 @@ class SupabaseAuthService {
   Future<void> signOut() async {
     await _client.auth.signOut();
   }
+
+  // Update profile metadata (username, avatar_url)
+  Future<void> updateProfile({String? displayName, String? avatarUrl}) async {
+    final Map<String, dynamic> data = {};
+    if (displayName != null) data['username'] = displayName;
+    if (avatarUrl != null) data['avatar_url'] = avatarUrl;
+    if (data.isNotEmpty) {
+      await _client.auth.updateUser(UserAttributes(data: data));
+    }
+  }
 }
 
 // Provider for Auth Service
