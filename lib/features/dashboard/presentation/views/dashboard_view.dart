@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -71,9 +72,10 @@ class DashboardView extends ConsumerWidget {
                       padding: const EdgeInsets.all(4),
                       radius: 18,
                       shadows: const [],
-                      child: const TabBar(
+                      child: TabBar(
                         indicatorSize: TabBarIndicatorSize.tab,
-                        tabs: [
+                        onTap: (_) => HapticFeedback.selectionClick(),
+                        tabs: const [
                           Tab(text: 'Today'),
                           Tab(text: 'Analytics'),
                         ],
@@ -130,7 +132,10 @@ class _GuardianProgressCard extends StatelessWidget {
     final progress = (xp / targetXp).clamp(0.0, 1.0);
 
     return GestureDetector(
-      onTap: () => GuardianSanctuaryModal.show(context),
+      onTap: () {
+        HapticFeedback.mediumImpact();
+        GuardianSanctuaryModal.show(context);
+      },
       child: LiquidGlassPanel(
         padding: const EdgeInsets.all(18),
         radius: 24,
@@ -447,7 +452,10 @@ class _ProfileAccountButton extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return GestureDetector(
-      onTap: () => _showProfileAccountModal(context, ref, level),
+      onTap: () {
+        HapticFeedback.lightImpact();
+        _showProfileAccountModal(context, ref, level);
+      },
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
@@ -599,6 +607,7 @@ class _ProfileAccountButton extends ConsumerWidget {
                   width: double.infinity,
                   child: ElevatedButton.icon(
                     onPressed: () async {
+                      HapticFeedback.mediumImpact();
                       Navigator.of(context).pop();
                       _showLogoutConfirmDialog(context, ref);
                     },
@@ -701,6 +710,7 @@ class _ProfileAccountButton extends ConsumerWidget {
                         Expanded(
                           child: ElevatedButton(
                             onPressed: () async {
+                              HapticFeedback.heavyImpact();
                               Navigator.of(context).pop();
                               await ref.read(authServiceProvider).signOut();
                             },

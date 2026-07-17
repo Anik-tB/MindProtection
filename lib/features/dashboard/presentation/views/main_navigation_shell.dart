@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_theme.dart';
@@ -161,8 +162,12 @@ class _NavButtonState extends State<_NavButton> with SingleTickerProviderStateMi
     return Expanded(
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
-        onTapDown: (_) => _controller.forward(),
+        onTapDown: (_) {
+          HapticFeedback.lightImpact();
+          _controller.forward();
+        },
         onTapUp: (_) {
+          HapticFeedback.mediumImpact();
           _controller.reverse();
           widget.onTap();
         },
