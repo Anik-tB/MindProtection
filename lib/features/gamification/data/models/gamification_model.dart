@@ -15,4 +15,6 @@ class GamificationModel {
   late int focusStreak;
 
   late int habitStreak;
+
+  DateTime? lastCheckInDate;
 }

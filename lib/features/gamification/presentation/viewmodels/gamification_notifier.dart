@@ -11,6 +11,7 @@ class GamificationState {
   final int coins;
   final int focusStreak;
   final int habitStreak;
+  final DateTime? lastCheckInDate;
 
   GamificationState({
     required this.level,
@@ -18,6 +19,7 @@ class GamificationState {
     required this.coins,
     required this.focusStreak,
     required this.habitStreak,
+    this.lastCheckInDate,
   });
 
   GamificationState copyWith({
@@ -26,6 +28,7 @@ class GamificationState {
     int? coins,
     int? focusStreak,
     int? habitStreak,
+    DateTime? lastCheckInDate,
   }) {
     return GamificationState(
       level: level ?? this.level,
@@ -33,6 +36,7 @@ class GamificationState {
       coins: coins ?? this.coins,
       focusStreak: focusStreak ?? this.focusStreak,
       habitStreak: habitStreak ?? this.habitStreak,
+      lastCheckInDate: lastCheckInDate ?? this.lastCheckInDate,
     );
   }
 }
@@ -64,6 +68,7 @@ class Gamification extends _$Gamification {
         coins: stats.coins,
         focusStreak: stats.focusStreak,
         habitStreak: stats.habitStreak,
+        lastCheckInDate: stats.lastCheckInDate,
       );
     } else {
       // Initialize if empty
@@ -73,6 +78,7 @@ class Gamification extends _$Gamification {
         coins: 0,
         focusStreak: 0,
         habitStreak: 0,
+        lastCheckInDate: null,
       );
     }
   }
@@ -83,6 +89,7 @@ class Gamification extends _$Gamification {
     required int coins,
     required int focusStreak,
     required int habitStreak,
+    DateTime? lastCheckInDate,
   }) async {
     final model = GamificationModel()
       ..id = 1
@@ -90,11 +97,54 @@ class Gamification extends _$Gamification {
       ..xp = xp
       ..coins = coins
       ..focusStreak = focusStreak
-      ..habitStreak = habitStreak;
+      ..habitStreak = habitStreak
+      ..lastCheckInDate = lastCheckInDate ?? state.lastCheckInDate;
 
     await _isar.writeTxn(() async {
       await _isar.gamificationModels.put(model);
     });
+  }
+
+  bool canClaimDailyCheckIn() {
+    final now = DateTime.now();
+    final last = state.lastCheckInDate;
+    if (last == null) return true;
+    return now.year != last.year || now.month != last.month || now.day != last.day;
+  }
+
+  Future<Map<String, int>> claimDailyCheckIn() async {
+    if (!canClaimDailyCheckIn()) return {'xp': 0, 'coins': 0};
+    final now = DateTime.now();
+    final xpReward = 50 + (state.level * 10);
+    final coinReward = 25 + (state.level * 5);
+
+    int newXp = state.xp + xpReward;
+    int newLevel = state.level;
+    int newCoins = state.coins + coinReward;
+    int xpNeeded = newLevel * 100;
+
+    while (newXp >= xpNeeded) {
+      newXp -= xpNeeded;
+      newLevel += 1;
+      newCoins += newLevel * 20;
+      xpNeeded = newLevel * 100;
+    }
+
+    state = state.copyWith(
+      xp: newXp,
+      level: newLevel,
+      coins: newCoins,
+      lastCheckInDate: now,
+    );
+    await _saveState(
+      level: state.level,
+      xp: state.xp,
+      coins: state.coins,
+      focusStreak: state.focusStreak,
+      habitStreak: state.habitStreak,
+      lastCheckInDate: state.lastCheckInDate,
+    );
+    return {'xp': xpReward, 'coins': coinReward};
   }
 
   Future<void> addXp(int amount) async {
@@ -119,6 +169,7 @@ class Gamification extends _$Gamification {
       coins: state.coins,
       focusStreak: state.focusStreak,
       habitStreak: state.habitStreak,
+      lastCheckInDate: state.lastCheckInDate,
     );
   }
 
@@ -130,6 +181,7 @@ class Gamification extends _$Gamification {
       coins: state.coins,
       focusStreak: state.focusStreak,
       habitStreak: state.habitStreak,
+      lastCheckInDate: state.lastCheckInDate,
     );
   }
 
@@ -144,6 +196,7 @@ class Gamification extends _$Gamification {
       coins: state.coins,
       focusStreak: state.focusStreak,
       habitStreak: state.habitStreak,
+      lastCheckInDate: state.lastCheckInDate,
     );
     return true;
   }
@@ -156,6 +209,7 @@ class Gamification extends _$Gamification {
       coins: state.coins,
       focusStreak: state.focusStreak,
       habitStreak: state.habitStreak,
+      lastCheckInDate: state.lastCheckInDate,
     );
   }
 
@@ -167,6 +221,7 @@ class Gamification extends _$Gamification {
       coins: state.coins,
       focusStreak: state.focusStreak,
       habitStreak: state.habitStreak,
+      lastCheckInDate: state.lastCheckInDate,
     );
   }
 
@@ -178,6 +233,7 @@ class Gamification extends _$Gamification {
       coins: state.coins,
       focusStreak: state.focusStreak,
       habitStreak: state.habitStreak,
+      lastCheckInDate: state.lastCheckInDate,
     );
   }
 
@@ -189,6 +245,7 @@ class Gamification extends _$Gamification {
       coins: state.coins,
       focusStreak: state.focusStreak,
       habitStreak: state.habitStreak,
+      lastCheckInDate: state.lastCheckInDate,
     );
   }
 }

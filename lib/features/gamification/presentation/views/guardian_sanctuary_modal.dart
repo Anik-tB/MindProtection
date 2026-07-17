@@ -181,7 +181,127 @@ class _GuardianSanctuaryModalState extends ConsumerState<GuardianSanctuaryModal>
               ],
             ),
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 14),
+
+          // Daily Check-in Banner
+          if (ref.read(gamificationProvider.notifier).canClaimDailyCheckIn())
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
+              child: GestureDetector(
+                onTap: () async {
+                  HapticFeedback.heavyImpact();
+                  final rewards = await ref
+                      .read(gamificationProvider.notifier)
+                      .claimDailyCheckIn();
+                  if (!context.mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Row(
+                        children: [
+                          const Icon(
+                            Icons.card_giftcard_rounded,
+                            color: AppTheme.accent,
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              '🎉 Daily Guardian Supply claimed! +${rewards['xp']} XP and +${rewards['coins']} Coins!',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      backgroundColor: AppTheme.surfaceRaised,
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      duration: const Duration(seconds: 4),
+                    ),
+                  );
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        AppTheme.accent.withValues(alpha: 0.25),
+                        AppTheme.primary.withValues(alpha: 0.25),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(
+                      color: AppTheme.accent.withValues(alpha: 0.5),
+                    ),
+                    boxShadow: AppTheme.primaryGlow,
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: AppTheme.accent.withValues(alpha: 0.25),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.card_giftcard_rounded,
+                          color: AppTheme.accent,
+                          size: 22,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Claim Daily Guardian Supply',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                                color: AppTheme.textPrimary,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              '+${50 + (stats.level * 10)} XP  •  +${25 + (stats.level * 5)} Coins',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: AppTheme.accent,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppTheme.accent,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Text(
+                          'CLAIM',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.black,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          const SizedBox(height: 14),
+
           // Tab Switcher
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24),

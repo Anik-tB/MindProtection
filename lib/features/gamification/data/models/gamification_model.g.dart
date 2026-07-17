@@ -32,13 +32,18 @@ const GamificationModelSchema = CollectionSchema(
       name: r'habitStreak',
       type: IsarType.long,
     ),
-    r'level': PropertySchema(
+    r'lastCheckInDate': PropertySchema(
       id: 3,
+      name: r'lastCheckInDate',
+      type: IsarType.dateTime,
+    ),
+    r'level': PropertySchema(
+      id: 4,
       name: r'level',
       type: IsarType.long,
     ),
     r'xp': PropertySchema(
-      id: 4,
+      id: 5,
       name: r'xp',
       type: IsarType.long,
     )
@@ -75,8 +80,9 @@ void _gamificationModelSerialize(
   writer.writeLong(offsets[0], object.coins);
   writer.writeLong(offsets[1], object.focusStreak);
   writer.writeLong(offsets[2], object.habitStreak);
-  writer.writeLong(offsets[3], object.level);
-  writer.writeLong(offsets[4], object.xp);
+  writer.writeDateTime(offsets[3], object.lastCheckInDate);
+  writer.writeLong(offsets[4], object.level);
+  writer.writeLong(offsets[5], object.xp);
 }
 
 GamificationModel _gamificationModelDeserialize(
@@ -90,8 +96,9 @@ GamificationModel _gamificationModelDeserialize(
   object.focusStreak = reader.readLong(offsets[1]);
   object.habitStreak = reader.readLong(offsets[2]);
   object.id = id;
-  object.level = reader.readLong(offsets[3]);
-  object.xp = reader.readLong(offsets[4]);
+  object.lastCheckInDate = reader.readDateTimeOrNull(offsets[3]);
+  object.level = reader.readLong(offsets[4]);
+  object.xp = reader.readLong(offsets[5]);
   return object;
 }
 
@@ -109,8 +116,10 @@ P _gamificationModelDeserializeProp<P>(
     case 2:
       return (reader.readLong(offset)) as P;
     case 3:
-      return (reader.readLong(offset)) as P;
+      return (reader.readDateTimeOrNull(offset)) as P;
     case 4:
+      return (reader.readLong(offset)) as P;
+    case 5:
       return (reader.readLong(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -438,6 +447,80 @@ extension GamificationModelQueryFilter
   }
 
   QueryBuilder<GamificationModel, GamificationModel, QAfterFilterCondition>
+      lastCheckInDateIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'lastCheckInDate',
+      ));
+    });
+  }
+
+  QueryBuilder<GamificationModel, GamificationModel, QAfterFilterCondition>
+      lastCheckInDateIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'lastCheckInDate',
+      ));
+    });
+  }
+
+  QueryBuilder<GamificationModel, GamificationModel, QAfterFilterCondition>
+      lastCheckInDateEqualTo(DateTime? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'lastCheckInDate',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<GamificationModel, GamificationModel, QAfterFilterCondition>
+      lastCheckInDateGreaterThan(
+    DateTime? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'lastCheckInDate',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<GamificationModel, GamificationModel, QAfterFilterCondition>
+      lastCheckInDateLessThan(
+    DateTime? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'lastCheckInDate',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<GamificationModel, GamificationModel, QAfterFilterCondition>
+      lastCheckInDateBetween(
+    DateTime? lower,
+    DateTime? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'lastCheckInDate',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<GamificationModel, GamificationModel, QAfterFilterCondition>
       levelEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
@@ -601,6 +684,20 @@ extension GamificationModelQuerySortBy
   }
 
   QueryBuilder<GamificationModel, GamificationModel, QAfterSortBy>
+      sortByLastCheckInDate() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastCheckInDate', Sort.asc);
+    });
+  }
+
+  QueryBuilder<GamificationModel, GamificationModel, QAfterSortBy>
+      sortByLastCheckInDateDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastCheckInDate', Sort.desc);
+    });
+  }
+
+  QueryBuilder<GamificationModel, GamificationModel, QAfterSortBy>
       sortByLevel() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'level', Sort.asc);
@@ -686,6 +783,20 @@ extension GamificationModelQuerySortThenBy
   }
 
   QueryBuilder<GamificationModel, GamificationModel, QAfterSortBy>
+      thenByLastCheckInDate() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastCheckInDate', Sort.asc);
+    });
+  }
+
+  QueryBuilder<GamificationModel, GamificationModel, QAfterSortBy>
+      thenByLastCheckInDateDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastCheckInDate', Sort.desc);
+    });
+  }
+
+  QueryBuilder<GamificationModel, GamificationModel, QAfterSortBy>
       thenByLevel() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'level', Sort.asc);
@@ -737,6 +848,13 @@ extension GamificationModelQueryWhereDistinct
   }
 
   QueryBuilder<GamificationModel, GamificationModel, QDistinct>
+      distinctByLastCheckInDate() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'lastCheckInDate');
+    });
+  }
+
+  QueryBuilder<GamificationModel, GamificationModel, QDistinct>
       distinctByLevel() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'level');
@@ -773,6 +891,13 @@ extension GamificationModelQueryProperty
   QueryBuilder<GamificationModel, int, QQueryOperations> habitStreakProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'habitStreak');
+    });
+  }
+
+  QueryBuilder<GamificationModel, DateTime?, QQueryOperations>
+      lastCheckInDateProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'lastCheckInDate');
     });
   }
 
