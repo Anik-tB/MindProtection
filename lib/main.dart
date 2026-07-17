@@ -16,7 +16,7 @@ void main() async {
   // Initialize Supabase Cloud Backend
   await Supabase.initialize(
     url: SupabaseConfig.url,
-    anonKey: SupabaseConfig.anonKey,
+    publishableKey: SupabaseConfig.publishableKey,
   );
   
   runApp(
@@ -35,6 +35,8 @@ class MindProtectionApp extends StatelessWidget {
       title: 'MindProtection',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.darkTheme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: ThemeMode.dark,
       home: const AuthGate(),
     );
   }
