@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../viewmodels/recovery_notifier.dart';
@@ -103,6 +104,45 @@ class _RecoveryViewState extends ConsumerState<RecoveryView>
                   labelText: 'Trigger factor (e.g. Boredom, Instagram)',
                 ),
               ),
+              const SizedBox(height: 10),
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    _QuickTriggerChip(
+                      label: '🥱 Boredom',
+                      onTap: () {
+                        _triggerController.text = 'Boredom & Idle Time';
+                        HapticFeedback.lightImpact();
+                      },
+                    ),
+                    const SizedBox(width: 8),
+                    _QuickTriggerChip(
+                      label: '🌙 Late Night',
+                      onTap: () {
+                        _triggerController.text = 'Late Night Surfing';
+                        HapticFeedback.lightImpact();
+                      },
+                    ),
+                    const SizedBox(width: 8),
+                    _QuickTriggerChip(
+                      label: '😤 Stress / Anxiety',
+                      onTap: () {
+                        _triggerController.text = 'High Stress & Exhaustion';
+                        HapticFeedback.lightImpact();
+                      },
+                    ),
+                    const SizedBox(width: 8),
+                    _QuickTriggerChip(
+                      label: '📱 Social Media',
+                      onTap: () {
+                        _triggerController.text = 'Instagram / TikTok Feed';
+                        HapticFeedback.lightImpact();
+                      },
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
           actions: [
@@ -114,6 +154,7 @@ class _RecoveryViewState extends ConsumerState<RecoveryView>
               onPressed: () async {
                 final trigger = _triggerController.text.trim();
                 if (trigger.isEmpty) return;
+                HapticFeedback.heavyImpact();
                 final notifier = ref.read(recoveryNotifierProvider.notifier);
                 if (isRelapse) {
                   await notifier.reportRelapse(trigger);
@@ -331,7 +372,10 @@ class _RecoveryViewState extends ConsumerState<RecoveryView>
                       ),
                     ),
                     GestureDetector(
-                      onTap: () => _showLogDialog(context, isRelapse: true),
+                      onTap: () {
+                        HapticFeedback.mediumImpact();
+                        _showLogDialog(context, isRelapse: true);
+                      },
                       child: Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
@@ -373,7 +417,10 @@ class _RecoveryViewState extends ConsumerState<RecoveryView>
                     ),
                     const SizedBox(width: 14),
                     GestureDetector(
-                      onTap: () => recoveryNotifier.setEmergencyLock(true),
+                      onTap: () {
+                        HapticFeedback.heavyImpact();
+                        recoveryNotifier.setEmergencyLock(true);
+                      },
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                         decoration: BoxDecoration(
@@ -406,7 +453,10 @@ class _RecoveryViewState extends ConsumerState<RecoveryView>
                 icon: Icons.vpn_lock_rounded,
                 color: AppTheme.error,
                 isActive: recoveryState.isAdultBlockerActive,
-                onChanged: (_) => recoveryNotifier.toggleAdultBlocker(),
+                onChanged: (value) {
+                  HapticFeedback.mediumImpact();
+                  recoveryNotifier.toggleAdultBlocker();
+                },
               ),
               const SizedBox(height: 10),
               _GuardSwitch(
@@ -415,7 +465,10 @@ class _RecoveryViewState extends ConsumerState<RecoveryView>
                 icon: Icons.visibility_off_rounded,
                 color: AppTheme.secondary,
                 isActive: recoveryState.isShortsBlockerActive,
-                onChanged: (_) => recoveryNotifier.toggleShortsBlocker(),
+                onChanged: (value) {
+                  HapticFeedback.mediumImpact();
+                  recoveryNotifier.toggleShortsBlocker();
+                },
               ),
               const SizedBox(height: 10),
               _GuardSwitch(
@@ -424,7 +477,10 @@ class _RecoveryViewState extends ConsumerState<RecoveryView>
                 icon: Icons.app_blocking_rounded,
                 color: AppTheme.primary,
                 isActive: recoveryState.isAppLimiterActive,
-                onChanged: (_) => recoveryNotifier.toggleAppLimiter(),
+                onChanged: (value) {
+                  HapticFeedback.mediumImpact();
+                  recoveryNotifier.toggleAppLimiter();
+                },
               ),
               const SizedBox(height: 24),
 
@@ -434,7 +490,10 @@ class _RecoveryViewState extends ConsumerState<RecoveryView>
                 children: [
                   _SectionLabel(title: 'Discipline Log'),
                   GestureDetector(
-                    onTap: () => _showLogDialog(context, isRelapse: false),
+                    onTap: () {
+                      HapticFeedback.lightImpact();
+                      _showLogDialog(context, isRelapse: false);
+                    },
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
@@ -844,6 +903,40 @@ class _AccountSecurityCard extends ConsumerWidget {
           child: FadeTransition(opacity: anim1, child: child),
         );
       },
+    );
+  }
+}
+
+class _QuickTriggerChip extends StatelessWidget {
+  final String label;
+  final VoidCallback onTap;
+
+  const _QuickTriggerChip({required this.label, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          decoration: BoxDecoration(
+            color: AppTheme.surfaceCard,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: AppTheme.glassStroke),
+          ),
+          child: Text(
+            label,
+            style: const TextStyle(
+              color: AppTheme.textSecondary,
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
