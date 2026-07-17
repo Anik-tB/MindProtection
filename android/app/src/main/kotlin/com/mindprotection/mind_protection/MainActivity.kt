@@ -2,9 +2,11 @@ package com.mindprotection.mind_protection
 
 import android.app.AppOpsManager
 import android.app.admin.DevicePolicyManager
+import android.app.usage.UsageStatsManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Process
 import android.provider.Settings
@@ -14,6 +16,7 @@ import com.mindprotection.mind_protection.services.WellbeingForegroundService
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
+import java.util.Calendar
 
 class MainActivity : FlutterActivity() {
     private val CHANNEL = "com.mindprotection.blocking"
@@ -102,6 +105,13 @@ class MainActivity : FlutterActivity() {
                     stopService(intent)
                     result.success(true)
                 }
+                "getUsageStats" -> {
+                    if (!hasUsageStatsPermission()) {
+                        result.error("PERMISSION_DENIED", "Usage Stats permission not granted", null)
+                    } else {
+                        result.success(getAppUsageStats())
+                    }
+                }
                 else -> {
                     result.notImplemented()
                 }
@@ -154,5 +164,55 @@ class MainActivity : FlutterActivity() {
         val devicePolicyManager = getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
         val componentName = ComponentName(this, AntiUninstallDeviceAdminReceiver::class.java)
         return devicePolicyManager.isAdminActive(componentName)
+    }
+
+    private fun getAppUsageStats(): List<Map<String, Any>> {
+        val usageStatsManager = getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
+        val calendar = Calendar.getInstance()
+        // End: now
+        val endTime = calendar.timeInMillis
+        // Start: midnight today
+        calendar.set(Calendar.HOUR_OF_DAY, 0)
+        calendar.set(Calendar.MINUTE, 0)
+        calendar.set(Calendar.SECOND, 0)
+        calendar.set(Calendar.MILLISECOND, 0)
+        val startTime = calendar.timeInMillis
+
+        val usageStatsList = usageStatsManager.queryUsageStats(
+            UsageStatsManager.INTERVAL_DAILY, startTime, endTime
+        )
+
+        val pm: PackageManager = packageManager
+        val result = mutableListOf<Map<String, Any>>()
+
+        if (usageStatsList != null) {
+            for (usageStats in usageStatsList) {
+                val pkg = usageStats.packageName
+                // Skip our own app
+                if (pkg == packageName) continue
+                val totalMs = usageStats.totalTimeInForeground
+                if (totalMs <= 0L) continue
+                val minutes = (totalMs / 1000 / 60).toInt()
+                if (minutes <= 0) continue
+
+                // Resolve human-readable app name
+                val appName: String = try {
+                    pm.getApplicationLabel(pm.getApplicationInfo(pkg, 0)).toString()
+                } catch (e: PackageManager.NameNotFoundException) {
+                    pkg
+                }
+
+                result.add(
+                    mapOf(
+                        "packageName" to pkg,
+                        "appName" to appName,
+                        "usageMinutes" to minutes
+                    )
+                )
+            }
+        }
+
+        // Sort by usage descending
+        return result.sortedByDescending { it["usageMinutes"] as Int }
     }
 }
