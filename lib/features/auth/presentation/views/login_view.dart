@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:mind_protection/core/network/supabase_auth_service.dart';
@@ -49,14 +50,20 @@ class _LoginViewState extends ConsumerState<LoginView>
   }
 
   Future<void> _handleLogin() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (!_formKey.currentState!.validate()) {
+      HapticFeedback.vibrate();
+      return;
+    }
+    HapticFeedback.mediumImpact();
     setState(() => _isLoading = true);
     try {
       await ref.read(authServiceProvider).signIn(
             email: _emailController.text.trim(),
             password: _passwordController.text.trim(),
           );
+      HapticFeedback.heavyImpact();
     } catch (e) {
+      HapticFeedback.vibrate();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -155,9 +162,12 @@ class _LoginViewState extends ConsumerState<LoginView>
                                             ? Icons.visibility_off_outlined
                                             : Icons.visibility_outlined,
                                       ),
-                                      onPressed: () => setState(
-                                        () => _obscurePassword = !_obscurePassword,
-                                      ),
+                                      onPressed: () {
+                                        HapticFeedback.selectionClick();
+                                        setState(
+                                          () => _obscurePassword = !_obscurePassword,
+                                        );
+                                      },
                                     ),
                                   ),
                                   validator: (value) {
@@ -188,9 +198,12 @@ class _LoginViewState extends ConsumerState<LoginView>
                                 style: Theme.of(context).textTheme.bodyMedium,
                               ),
                               TextButton(
-                                onPressed: () => Navigator.of(context).push(
-                                  MaterialPageRoute(builder: (_) => const RegisterView()),
-                                ),
+                                onPressed: () {
+                                  HapticFeedback.lightImpact();
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(builder: (_) => const RegisterView()),
+                                  );
+                                },
                                 child: const Text('Create one'),
                               ),
                             ],

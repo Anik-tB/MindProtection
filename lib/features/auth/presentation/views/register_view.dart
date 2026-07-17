@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:mind_protection/core/network/supabase_auth_service.dart';
@@ -52,7 +53,11 @@ class _RegisterViewState extends ConsumerState<RegisterView>
   }
 
   Future<void> _handleRegister() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (!_formKey.currentState!.validate()) {
+      HapticFeedback.vibrate();
+      return;
+    }
+    HapticFeedback.mediumImpact();
     setState(() => _isLoading = true);
     try {
       await ref.read(authServiceProvider).signUp(
@@ -60,6 +65,7 @@ class _RegisterViewState extends ConsumerState<RegisterView>
             password: _passwordController.text.trim(),
             username: _usernameController.text.trim(),
           );
+      HapticFeedback.heavyImpact();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -71,6 +77,7 @@ class _RegisterViewState extends ConsumerState<RegisterView>
         Navigator.of(context).pop();
       }
     } catch (e) {
+      HapticFeedback.vibrate();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -98,7 +105,10 @@ class _RegisterViewState extends ConsumerState<RegisterView>
                 child: _GlassIconButton(
                   icon: Icons.arrow_back_rounded,
                   tooltip: 'Back',
-                  onTap: () => Navigator.of(context).pop(),
+                  onTap: () {
+                    HapticFeedback.lightImpact();
+                    Navigator.of(context).pop();
+                  },
                 ),
               ),
               Center(
@@ -192,9 +202,12 @@ class _RegisterViewState extends ConsumerState<RegisterView>
                                                 ? Icons.visibility_off_outlined
                                                 : Icons.visibility_outlined,
                                           ),
-                                          onPressed: () => setState(
-                                            () => _obscurePassword = !_obscurePassword,
-                                          ),
+                                          onPressed: () {
+                                            HapticFeedback.selectionClick();
+                                            setState(
+                                              () => _obscurePassword = !_obscurePassword,
+                                            );
+                                          },
                                         ),
                                       ),
                                       validator: (value) {
@@ -243,7 +256,10 @@ class _RegisterViewState extends ConsumerState<RegisterView>
                                     style: Theme.of(context).textTheme.bodyMedium,
                                   ),
                                   TextButton(
-                                    onPressed: () => Navigator.of(context).pop(),
+                                    onPressed: () {
+                                      HapticFeedback.lightImpact();
+                                      Navigator.of(context).pop();
+                                    },
                                     child: const Text('Sign in'),
                                   ),
                                 ],
