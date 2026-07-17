@@ -34,6 +34,7 @@ class WellbeingRepositoryImpl implements WellbeingRepository {
       ..waterIntakeLiters = 0.0
       ..sleepDurationHours = 0.0
       ..moodRating = 3
+      ..mindfulMinutes = 0
       ..date = today;
 
     await _isar.writeTxn(() async {
@@ -78,6 +79,17 @@ class WellbeingRepositoryImpl implements WellbeingRepository {
   }
 
   @override
+  Future<void> updateMindfulness(int minutes) async {
+    final log = await getOrCreateTodayLog();
+    log.mindfulMinutes = minutes;
+
+    await _isar.writeTxn(() async {
+      await _isar.wellbeingLogModels.put(log);
+    });
+    await _syncLogToCloud(log);
+  }
+
+  @override
   Future<void> syncWithCloud() async {
     final user = _supabase.auth.currentUser;
     if (user == null) return;
@@ -94,6 +106,7 @@ class WellbeingRepositoryImpl implements WellbeingRepository {
           final water = (data['water_intake_liters'] as num).toDouble();
           final sleep = (data['sleep_duration_hours'] as num).toDouble();
           final mood = data['mood_rating'] as int;
+          final mindful = (data['mindful_minutes'] as num?)?.toInt() ?? 0;
           final date = DateTime.parse(data['date'] as String);
 
           final log = WellbeingLogModel()
@@ -101,6 +114,7 @@ class WellbeingRepositoryImpl implements WellbeingRepository {
             ..waterIntakeLiters = water
             ..sleepDurationHours = sleep
             ..moodRating = mood
+            ..mindfulMinutes = mindful
             ..date = date;
 
           await _isar.wellbeingLogModels.put(log);
@@ -116,6 +130,7 @@ class WellbeingRepositoryImpl implements WellbeingRepository {
           'water_intake_liters': log.waterIntakeLiters,
           'sleep_duration_hours': log.sleepDurationHours,
           'mood_rating': log.moodRating,
+          'mindful_minutes': log.mindfulMinutes,
           'date': log.date.toIso8601String(),
         });
       }
@@ -135,6 +150,7 @@ class WellbeingRepositoryImpl implements WellbeingRepository {
         'water_intake_liters': log.waterIntakeLiters,
         'sleep_duration_hours': log.sleepDurationHours,
         'mood_rating': log.moodRating,
+        'mindful_minutes': log.mindfulMinutes,
         'date': log.date.toIso8601String(),
       });
     } catch (e) {
