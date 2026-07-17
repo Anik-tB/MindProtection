@@ -4,6 +4,11 @@ import '../../features/focus/data/models/focus_session_model.dart';
 import '../../features/planner/data/models/task_model.dart';
 import '../../features/habits/data/models/habit_model.dart';
 import '../../features/blocking/data/models/screen_time_model.dart';
+import '../../features/recovery/data/models/sobriety_model.dart';
+import '../../features/planner/data/models/routine_model.dart';
+import '../../features/planner/data/models/goal_model.dart';
+import '../../features/wellbeing/data/models/wellbeing_model.dart';
+import '../../features/gamification/data/models/gamification_model.dart';
 
 class IsarService {
   static Isar? _instance;
@@ -26,6 +31,11 @@ class IsarService {
         TaskModelSchema,
         HabitModelSchema,
         ScreenTimeModelSchema,
+        SobrietyModelSchema,
+        RoutineModelSchema,
+        GoalModelSchema,
+        WellbeingLogModelSchema,
+        GamificationModelSchema,
       ],
       directory: dir.path,
     );
