@@ -16,6 +16,15 @@ import com.mindprotection.mind_protection.services.WellbeingForegroundService
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
+import android.Manifest
+import android.app.AlarmManager
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import androidx.core.app.ActivityCompat
+import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat
+import com.mindprotection.mind_protection.services.NotificationAlarmReceiver
 import java.util.Calendar
 
 class MainActivity : FlutterActivity() {
@@ -122,6 +131,59 @@ class MainActivity : FlutterActivity() {
                 }
             }
         }
+
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "com.mindprotection.notifications").setMethodCallHandler { call, result ->
+            when (call.method) {
+                "checkPermission" -> {
+                    val granted = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
+                    } else {
+                        true
+                    }
+                    result.success(granted)
+                }
+                "requestPermission" -> {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.POST_NOTIFICATIONS), 101)
+                    }
+                    result.success(true)
+                }
+                "showInstantNotification" -> {
+                    val id = call.argument<Int>("id") ?: 1000
+                    val title = call.argument<String>("title") ?: "MindProtection Reminder"
+                    val body = call.argument<String>("body") ?: "Time to lock in and focus!"
+                    showInstantNotification(id, title, body)
+                    result.success(true)
+                }
+                "scheduleDailyReminder" -> {
+                    val id = call.argument<Int>("id") ?: 1001
+                    val title = call.argument<String>("title") ?: "Focus Reminder"
+                    val body = call.argument<String>("body") ?: "Ready for a high-focus session?"
+                    val hour = call.argument<Int>("hour") ?: 8
+                    val minute = call.argument<Int>("minute") ?: 0
+                    scheduleDailyAlarm(id, title, body, hour, minute)
+                    result.success(true)
+                }
+                "cancelReminder" -> {
+                    val id = call.argument<Int>("id") ?: 1001
+                    cancelDailyAlarm(id)
+                    result.success(true)
+                }
+                "getVaultNotifications" -> {
+                    val prefs = getSharedPreferences("com.mindprotection.blocking", Context.MODE_PRIVATE)
+                    val vaultItems = prefs.getStringSet("vault_notifications", emptySet()) ?: emptySet()
+                    result.success(vaultItems.toList())
+                }
+                "clearVaultNotifications" -> {
+                    val prefs = getSharedPreferences("com.mindprotection.blocking", Context.MODE_PRIVATE)
+                    prefs.edit().remove("vault_notifications").apply()
+                    result.success(true)
+                }
+                else -> {
+                    result.notImplemented()
+                }
+            }
+        }
     }
 
     private fun hasUsageStatsPermission(): Boolean {
@@ -219,5 +281,92 @@ class MainActivity : FlutterActivity() {
 
         // Sort by usage descending
         return result.sortedByDescending { it["usageMinutes"] as Int }
+    }
+
+    private fun showInstantNotification(id: Int, title: String, body: String) {
+        val nm = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val channelId = "mindprotection_reminders"
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                channelId,
+                "MindProtection Reminders & Nudges",
+                NotificationManager.IMPORTANCE_HIGH
+            ).apply {
+                description = "Daily focus kickoff, evening reflection, and streak reminders"
+                enableVibration(true)
+            }
+            nm.createNotificationChannel(channel)
+        }
+
+        val tapIntent = Intent(this, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+        }
+        val pendingTap = PendingIntent.getActivity(
+            this,
+            id,
+            tapIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val notification = NotificationCompat.Builder(this, channelId)
+            .setSmallIcon(R.mipmap.ic_launcher)
+            .setContentTitle(title)
+            .setContentText(body)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(body))
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setAutoCancel(true)
+            .setContentIntent(pendingTap)
+            .build()
+
+        nm.notify(id, notification)
+    }
+
+    private fun scheduleDailyAlarm(id: Int, title: String, body: String, hour: Int, minute: Int) {
+        val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        val intent = Intent(this, NotificationAlarmReceiver::class.java).apply {
+            putExtra("id", id)
+            putExtra("title", title)
+            putExtra("body", body)
+            putExtra("isDaily", true)
+            putExtra("hour", hour)
+            putExtra("minute", minute)
+        }
+        val pendingIntent = PendingIntent.getBroadcast(
+            this,
+            id,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val calendar = Calendar.getInstance().apply {
+            timeInMillis = System.currentTimeMillis()
+            set(Calendar.HOUR_OF_DAY, hour)
+            set(Calendar.MINUTE, minute)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+
+        if (calendar.timeInMillis <= System.currentTimeMillis()) {
+            calendar.add(Calendar.DAY_OF_YEAR, 1)
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, calendar.timeInMillis, pendingIntent)
+        } else {
+            alarmManager.setExact(AlarmManager.RTC_WAKEUP, calendar.timeInMillis, pendingIntent)
+        }
+    }
+
+    private fun cancelDailyAlarm(id: Int) {
+        val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        val intent = Intent(this, NotificationAlarmReceiver::class.java)
+        val pendingIntent = PendingIntent.getBroadcast(
+            this,
+            id,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        alarmManager.cancel(pendingIntent)
     }
 }
