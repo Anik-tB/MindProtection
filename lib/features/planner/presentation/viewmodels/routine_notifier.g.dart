@@ -6,7 +6,23 @@ part of 'routine_notifier.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$routineListHash() => r'ce4477687229a7b811215babd703417637b0f851';
+String _$routineRepositoryHash() => r'387e6ef6cda1ee0251883eca1ff714285291f0b0';
+
+/// See also [routineRepository].
+@ProviderFor(routineRepository)
+final routineRepositoryProvider =
+    AutoDisposeProvider<RoutineRepository>.internal(
+  routineRepository,
+  name: r'routineRepositoryProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$routineRepositoryHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+typedef RoutineRepositoryRef = AutoDisposeProviderRef<RoutineRepository>;
+String _$routineListHash() => r'6dbcdbaa66de608ee90742db5bd3580dd89aa355';
 
 /// See also [RoutineList].
 @ProviderFor(RoutineList)

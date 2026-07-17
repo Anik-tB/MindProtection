@@ -1,19 +1,24 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:isar/isar.dart';
-import '../../../../core/db/isar_service.dart';
 import '../../data/models/routine_model.dart';
+import '../../data/repositories/routine_repository_impl.dart';
+import '../../domain/repositories/routine_repository.dart';
 import '../../../gamification/presentation/viewmodels/gamification_notifier.dart';
 
 part 'routine_notifier.g.dart';
 
 @riverpod
+RoutineRepository routineRepository(RoutineRepositoryRef ref) {
+  return RoutineRepositoryImpl();
+}
+
+@riverpod
 class RoutineList extends _$RoutineList {
-  late final Isar _isar;
+  late final RoutineRepository _repository;
 
   @override
   Stream<List<RoutineModel>> build() {
-    _isar = IsarService.instance;
-    return _isar.routineModels.where().watch(fireImmediately: true);
+    _repository = ref.watch(routineRepositoryProvider);
+    return _repository.watchRoutines();
   }
 
   Future<void> addRoutine(String title, String timeOfDay) async {
@@ -23,23 +28,12 @@ class RoutineList extends _$RoutineList {
       ..isCompleted = false
       ..lastChecked = DateTime.now();
 
-    await _isar.writeTxn(() async {
-      await _isar.routineModels.put(routine);
-    });
+    await _repository.addRoutine(routine);
   }
 
   Future<void> toggleRoutine(int id) async {
-    final routine = await _isar.routineModels.get(id);
-    if (routine == null) return;
-
-    routine.isCompleted = !routine.isCompleted;
-    routine.lastChecked = DateTime.now();
-
-    await _isar.writeTxn(() async {
-      await _isar.routineModels.put(routine);
-    });
-
-    if (routine.isCompleted) {
+    final isCompleted = await _repository.toggleRoutine(id);
+    if (isCompleted) {
       // Reward XP on routine completion
       final gamificationNotifier = ref.read(gamificationProvider.notifier);
       await gamificationNotifier.addXp(10); // +10 XP
@@ -48,8 +42,6 @@ class RoutineList extends _$RoutineList {
   }
 
   Future<void> deleteRoutine(int id) async {
-    await _isar.writeTxn(() async {
-      await _isar.routineModels.delete(id);
-    });
+    await _repository.deleteRoutine(id);
   }
 }
