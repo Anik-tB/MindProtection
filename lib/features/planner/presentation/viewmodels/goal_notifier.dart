@@ -1,19 +1,24 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:isar/isar.dart';
-import '../../../../core/db/isar_service.dart';
 import '../../data/models/goal_model.dart';
+import '../../data/repositories/goal_repository_impl.dart';
+import '../../domain/repositories/goal_repository.dart';
 import '../../../gamification/presentation/viewmodels/gamification_notifier.dart';
 
 part 'goal_notifier.g.dart';
 
 @riverpod
+GoalRepository goalRepository(GoalRepositoryRef ref) {
+  return GoalRepositoryImpl();
+}
+
+@riverpod
 class GoalList extends _$GoalList {
-  late final Isar _isar;
+  late final GoalRepository _repository;
 
   @override
   Stream<List<GoalModel>> build() {
-    _isar = IsarService.instance;
-    return _isar.goalModels.where().watch(fireImmediately: true);
+    _repository = ref.watch(goalRepositoryProvider);
+    return _repository.watchGoals();
   }
 
   Future<void> addGoal(String title, bool isLongTerm, DateTime targetDate) async {
@@ -23,32 +28,23 @@ class GoalList extends _$GoalList {
       ..targetDate = targetDate
       ..isCompleted = false;
 
-    await _isar.writeTxn(() async {
-      await _isar.goalModels.put(goal);
-    });
+    await _repository.addGoal(goal);
   }
 
   Future<void> toggleGoal(int id) async {
-    final goal = await _isar.goalModels.get(id);
-    if (goal == null) return;
+    final existingGoal = state.value?.where((g) => g.id == id).firstOrNull;
+    final isLongTerm = existingGoal?.isLongTerm ?? false;
 
-    goal.isCompleted = !goal.isCompleted;
-
-    await _isar.writeTxn(() async {
-      await _isar.goalModels.put(goal);
-    });
-
-    if (goal.isCompleted) {
+    final isCompleted = await _repository.toggleGoal(id);
+    if (isCompleted) {
       // Reward XP on goal completion
       final gamificationNotifier = ref.read(gamificationProvider.notifier);
-      await gamificationNotifier.addXp(goal.isLongTerm ? 100 : 30); // Long-term = 100 XP, Short-term = 30 XP
-      await gamificationNotifier.addCoins(goal.isLongTerm ? 50 : 10);
+      await gamificationNotifier.addXp(isLongTerm ? 100 : 30);
+      await gamificationNotifier.addCoins(isLongTerm ? 50 : 10);
     }
   }
 
   Future<void> deleteGoal(int id) async {
-    await _isar.writeTxn(() async {
-      await _isar.goalModels.delete(id);
-    });
+    await _repository.deleteGoal(id);
   }
 }

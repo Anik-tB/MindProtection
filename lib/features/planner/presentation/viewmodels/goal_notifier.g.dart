@@ -6,7 +6,22 @@ part of 'goal_notifier.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$goalListHash() => r'd532007704df63d501e7ae12be7048ede1611499';
+String _$goalRepositoryHash() => r'7c13b00f3141ad442559412877d25c64e6398ef8';
+
+/// See also [goalRepository].
+@ProviderFor(goalRepository)
+final goalRepositoryProvider = AutoDisposeProvider<GoalRepository>.internal(
+  goalRepository,
+  name: r'goalRepositoryProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$goalRepositoryHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+typedef GoalRepositoryRef = AutoDisposeProviderRef<GoalRepository>;
+String _$goalListHash() => r'66bf1a7b8af82ef6713021bd378440e88e8d33df';
 
 /// See also [GoalList].
 @ProviderFor(GoalList)
