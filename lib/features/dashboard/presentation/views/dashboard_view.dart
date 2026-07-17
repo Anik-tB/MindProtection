@@ -1,334 +1,736 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 
-class DashboardView extends StatelessWidget {
+import '../../../../core/theme/app_theme.dart';
+import '../../../../core/ui/liquid_glass.dart';
+import '../../../../core/network/supabase_auth_service.dart';
+import '../../../focus/presentation/viewmodels/focus_timer_notifier.dart';
+import '../../../gamification/presentation/viewmodels/gamification_notifier.dart';
+import '../../../recovery/presentation/viewmodels/recovery_notifier.dart';
+import '../../../wellbeing/presentation/viewmodels/wellbeing_notifier.dart';
+import '../../../gamification/presentation/views/guardian_sanctuary_modal.dart';
+import 'analytics_view.dart';
+
+class DashboardView extends ConsumerWidget {
   const DashboardView({super.key});
 
   @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final stats = ref.watch(gamificationProvider);
+    final recoveryState = ref.watch(recoveryNotifierProvider);
+    final sessionsAsync = ref.watch(focusSessionListProvider);
+    final wellbeingAsync = ref.watch(todayWellbeingLogProvider);
+
+    final sessions = sessionsAsync.value ?? [];
+    final wellbeing = wellbeingAsync.value;
+
+    final today = DateTime.now();
+    final todaySessions = sessions.where((session) {
+      return session.startTime.year == today.year &&
+          session.startTime.month == today.month &&
+          session.startTime.day == today.day &&
+          session.isCompleted;
+    }).toList();
+
+    final totalFocusMinutes =
+        todaySessions.fold(0, (sum, session) => sum + session.durationMinutes);
+    final waterIntake = wellbeing?.waterIntakeLiters ?? 0.0;
+    final streakDays = recoveryState.sobriety?.currentStreakDays ?? 0;
+    final focusScore =
+        (60 + (todaySessions.length * 10) + (streakDays * 2)).clamp(0, 100);
+
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        body: SafeArea(
+          bottom: false,
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    AppPageHeader(
+                      title: _greetingTitle(),
+                      subtitle: 'Your protection system is ready for today.',
+                      icon: Icons.shield_rounded,
+                      trailing: _ProfileAccountButton(level: stats.level),
+                    ),
+                    const SizedBox(height: 18),
+                    _GuardianProgressCard(
+                      level: stats.level,
+                      xp: stats.xp,
+                      coins: stats.coins,
+                      streakDays: streakDays,
+                    ),
+                    const SizedBox(height: 14),
+                    LiquidGlassPanel(
+                      padding: const EdgeInsets.all(4),
+                      radius: 18,
+                      shadows: const [],
+                      child: const TabBar(
+                        indicatorSize: TabBarIndicatorSize.tab,
+                        tabs: [
+                          Tab(text: 'Today'),
+                          Tab(text: 'Analytics'),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: TabBarView(
+                  children: [
+                    _TodayTab(
+                      totalFocusMinutes: totalFocusMinutes,
+                      focusScore: focusScore,
+                      waterIntake: waterIntake,
+                      streakDays: streakDays,
+                      isSecure: recoveryState.isAdultBlockerActive,
+                    ),
+                    const AnalyticsView(),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _greetingTitle() {
+    final hour = DateTime.now().hour;
+    if (hour < 12) return 'Good morning';
+    if (hour < 17) return 'Good afternoon';
+    return 'Good evening';
+  }
+}
+
+class _GuardianProgressCard extends StatelessWidget {
+  final int level;
+  final int xp;
+  final int coins;
+  final int streakDays;
+
+  const _GuardianProgressCard({
+    required this.level,
+    required this.xp,
+    required this.coins,
+    required this.streakDays,
+  });
+
+  @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final targetXp = (level * 100).clamp(100, 100000);
+    final progress = (xp / targetXp).clamp(0.0, 1.0);
 
-    return Scaffold(
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'MindProtection',
-                        style: theme.textTheme.displayMedium?.copyWith(
-                          color: theme.colorScheme.primary,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Your digital wellbeing companion',
-                        style: theme.textTheme.bodyMedium,
-                      ),
-                    ],
-                  ),
-                  CircleAvatar(
-                    radius: 24,
-                    backgroundColor: theme.colorScheme.primary.withValues(
-                      alpha: 0.1,
-                    ),
-                    child: Icon(
-                      Icons.person_outline,
-                      color: theme.colorScheme.primary,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 25),
-
-              // Streak & Quick Stats
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildMetricCard(
-                      context,
-                      title: 'Daily Screen Time',
-                      value: '2h 15m',
-                      subtitle: 'Goal: 3h 0m',
-                      icon: Icons.timer_outlined,
-                      iconColor: theme.colorScheme.secondary,
-                    ),
-                  ),
-                  const SizedBox(width: 15),
-                  Expanded(
-                    child: _buildMetricCard(
-                      context,
-                      title: 'Focus Score',
-                      value: '84/100',
-                      subtitle: '+12% from yesterday',
-                      icon: Icons.psychology_outlined,
-                      iconColor: theme.colorScheme.primary,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-
-              // Glassmorphic main statistics/progress card
-              _buildMainAnalyticsCard(context),
-              const SizedBox(height: 25),
-
-              // Section: Daily Habits / Progress
-              Text('Today\'s Progress', style: theme.textTheme.titleLarge),
-              const SizedBox(height: 15),
-              _buildProgressItem(
-                context,
-                title: 'Water Intake',
-                progress: 0.6,
-                progressText: '1.2L / 2.0L',
-                icon: Icons.local_drink_outlined,
-                color: Colors.blueAccent,
-              ),
-              const SizedBox(height: 12),
-              _buildProgressItem(
-                context,
-                title: 'Study Session',
-                progress: 0.8,
-                progressText: '40m / 50m',
-                icon: Icons.menu_book_outlined,
-                color: theme.colorScheme.primary,
-              ),
-              const SizedBox(height: 12),
-              _buildProgressItem(
-                context,
-                title: 'No Social Media Relapse',
-                progress: 1.0,
-                progressText: '100% Secure',
-                icon: Icons.security_outlined,
-                color: theme.colorScheme.error,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMetricCard(
-    BuildContext context, {
-    required String title,
-    required String value,
-    required String subtitle,
-    required IconData icon,
-    required Color iconColor,
-  }) {
-    final theme = Theme.of(context);
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
+    return GestureDetector(
+      onTap: () => GuardianSanctuaryModal.show(context),
+      child: LiquidGlassPanel(
+        padding: const EdgeInsets.all(18),
+        radius: 24,
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Text(
-                    title,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w500,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                Icon(icon, color: iconColor, size: 20),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Text(
-              value,
-              style: theme.textTheme.displayMedium?.copyWith(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              subtitle,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                fontSize: 12,
-                color: theme.textTheme.bodyMedium?.color?.withValues(
-                  alpha: 0.7,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMainAnalyticsCard(BuildContext context) {
-    final theme = Theme.of(context);
-    return Card(
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              theme.colorScheme.primary.withValues(alpha: 0.15),
-              theme.colorScheme.secondary.withValues(alpha: 0.05),
-            ],
-          ),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Sobriety & Focus Streak',
-                    style: theme.textTheme.titleLarge?.copyWith(fontSize: 18),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 5,
-                    ),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.primary.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      'Level 5',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.primary,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ),
-                ],
+              const LiquidIconBadge(
+                icon: Icons.workspace_premium_rounded,
+                color: AppTheme.primary,
               ),
-              const SizedBox(height: 20),
-              Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '7 Days Clean',
-                          style: theme.textTheme.displayLarge?.copyWith(
-                            fontSize: 28,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Keep going! You are in the top 5% of this week\'s focus group.',
-                          style: theme.textTheme.bodyMedium,
-                        ),
-                      ],
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Guardian progress', style: Theme.of(context).textTheme.titleLarge),
+                    const SizedBox(height: 4),
+                    Text(
+                      '$xp / $targetXp XP toward the next level',
+                      style: Theme.of(context).textTheme.bodyMedium,
                     ),
-                  ),
-                  const SizedBox(width: 10),
-                  Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      SizedBox(
-                        height: 70,
-                        width: 70,
-                        child: CircularProgressIndicator(
-                          value: 0.7,
-                          strokeWidth: 8,
-                          backgroundColor: Colors.white12,
-                          color: theme.colorScheme.primary,
-                          strokeCap: StrokeCap.round,
-                        ),
-                      ),
-                      Icon(
-                        Icons.local_fire_department,
-                        color: theme.colorScheme.primary,
-                        size: 32,
-                      ),
-                    ],
-                  ),
-                ],
+                  ],
+                ),
+              ),
+              StatusPill(
+                label: '$coins coins',
+                icon: Icons.monetization_on_rounded,
+                color: AppTheme.accent,
               ),
             ],
           ),
-        ),
+          const SizedBox(height: 16),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(999),
+            child: LinearProgressIndicator(
+              value: progress,
+              minHeight: 9,
+              backgroundColor: AppTheme.border,
+              valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.primary),
+            ),
+          ),
+          const SizedBox(height: 14),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              StatusPill(
+                label: '$streakDays day recovery streak',
+                icon: Icons.local_fire_department_rounded,
+                color: AppTheme.error,
+              ),
+              const StatusPill(
+                label: 'Glass shield active',
+                icon: Icons.verified_user_rounded,
+                color: AppTheme.primary,
+              ),
+            ],
+          ),
+        ],
+      ),
+    ),
+  );
+}
+}
+
+class _TodayTab extends StatelessWidget {
+  final int totalFocusMinutes;
+  final int focusScore;
+  final double waterIntake;
+  final int streakDays;
+  final bool isSecure;
+
+  const _TodayTab({
+    required this.totalFocusMinutes,
+    required this.focusScore,
+    required this.waterIntake,
+    required this.streakDays,
+    required this.isSecure,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(20, 2, 20, 110),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SectionTitle(title: "Today's pulse"),
+          const SizedBox(height: 12),
+          GridView.count(
+            crossAxisCount: 2,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            crossAxisSpacing: 12,
+            mainAxisSpacing: 12,
+            childAspectRatio: 1.12,
+            children: [
+              MetricTile(
+                label: 'Focus time',
+                value: '${totalFocusMinutes}m',
+                icon: Icons.timer_rounded,
+                color: AppTheme.primary,
+              ),
+              MetricTile(
+                label: 'Focus score',
+                value: '$focusScore',
+                suffix: '/100',
+                icon: Icons.psychology_rounded,
+                color: AppTheme.secondary,
+              ),
+              MetricTile(
+                label: 'Hydration',
+                value: '${waterIntake.toStringAsFixed(1)}L',
+                suffix: '/2L',
+                icon: Icons.water_drop_rounded,
+                color: AppTheme.info,
+              ),
+              MetricTile(
+                label: 'Recovery streak',
+                value: '$streakDays',
+                suffix: 'days',
+                icon: Icons.local_fire_department_rounded,
+                color: AppTheme.error,
+              ),
+            ],
+          ),
+          const SizedBox(height: 22),
+          _MilestoneCard(streakDays: streakDays),
+          const SizedBox(height: 22),
+          const SectionTitle(title: 'Daily progress'),
+          const SizedBox(height: 12),
+          _ProgressTile(
+            label: 'Water intake',
+            progress: (waterIntake / 2.0).clamp(0.0, 1.0),
+            value: '${waterIntake.toStringAsFixed(1)}L / 2.0L',
+            icon: Icons.water_drop_rounded,
+            color: AppTheme.info,
+          ),
+          const SizedBox(height: 10),
+          _ProgressTile(
+            label: 'Focus sessions',
+            progress: (totalFocusMinutes / 60.0).clamp(0.0, 1.0),
+            value: '${totalFocusMinutes}m / 60m goal',
+            icon: Icons.alarm_on_rounded,
+            color: AppTheme.primary,
+          ),
+          const SizedBox(height: 10),
+          _ProgressTile(
+            label: 'Blocker shield',
+            progress: isSecure ? 1 : 0.35,
+            value: isSecure ? 'Fully protected' : 'Enable blockers',
+            icon: Icons.shield_rounded,
+            color: isSecure ? AppTheme.primary : AppTheme.warning,
+          ),
+        ],
       ),
     );
   }
+}
 
-  Widget _buildProgressItem(
-    BuildContext context, {
-    required String title,
-    required double progress,
-    required String progressText,
-    required IconData icon,
-    required Color color,
-  }) {
-    final theme = Theme.of(context);
-    return Card(
+class _MilestoneCard extends StatelessWidget {
+  final int streakDays;
+
+  const _MilestoneCard({required this.streakDays});
+
+  @override
+  Widget build(BuildContext context) {
+    final progress = (streakDays / 30.0).clamp(0.0, 1.0);
+
+    return Container(
+      decoration: BoxDecoration(
+        gradient: AppTheme.primaryGradient,
+        borderRadius: BorderRadius.circular(26),
+        boxShadow: AppTheme.primaryGlow,
+      ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+        padding: const EdgeInsets.all(20),
         child: Row(
           children: [
-            CircleAvatar(
-              backgroundColor: color.withValues(alpha: 0.1),
-              radius: 20,
-              child: Icon(icon, color: color, size: 20),
-            ),
-            const SizedBox(width: 15),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        title,
-                        style: theme.textTheme.titleLarge?.copyWith(
-                          fontSize: 15,
-                        ),
-                      ),
-                      Text(
-                        progressText,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
+                  StatusPill(
+                    label: '30 day milestone',
+                    icon: Icons.flag_rounded,
+                    color: AppTheme.onPrimary,
+                  ),
+                  const SizedBox(height: 14),
+                  Text(
+                    '$streakDays days protected',
+                    style: GoogleFonts.outfit(
+                      color: AppTheme.onPrimary,
+                      fontSize: 30,
+                      fontWeight: FontWeight.w900,
+                      height: 1.05,
+                    ),
                   ),
                   const SizedBox(height: 8),
+                  Text(
+                    streakDays > 0
+                        ? 'Your discipline is becoming visible.'
+                        : 'Start today with one clean decision.',
+                    style: GoogleFonts.inter(
+                      color: AppTheme.onPrimary.withValues(alpha: 0.82),
+                      fontSize: 13,
+                      height: 1.4,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
                   ClipRRect(
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(999),
                     child: LinearProgressIndicator(
                       value: progress,
-                      minHeight: 6,
-                      backgroundColor: Colors.white10,
-                      color: color,
+                      minHeight: 8,
+                      backgroundColor: AppTheme.onPrimary.withValues(alpha: 0.24),
+                      valueColor:
+                          const AlwaysStoppedAnimation<Color>(AppTheme.onPrimary),
                     ),
                   ),
                 ],
               ),
             ),
+            const SizedBox(width: 18),
+            Container(
+              width: 74,
+              height: 74,
+              decoration: BoxDecoration(
+                color: AppTheme.onPrimary.withValues(alpha: 0.18),
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: AppTheme.onPrimary.withValues(alpha: 0.28)),
+              ),
+              child: const Icon(
+                Icons.shield_rounded,
+                color: AppTheme.onPrimary,
+                size: 38,
+              ),
+            ),
           ],
         ),
       ),
+    );
+  }
+}
+
+class _ProgressTile extends StatelessWidget {
+  final String label;
+  final double progress;
+  final String value;
+  final IconData icon;
+  final Color color;
+
+  const _ProgressTile({
+    required this.label,
+    required this.progress,
+    required this.value,
+    required this.icon,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return LiquidGlassPanel(
+      padding: const EdgeInsets.all(16),
+      radius: 18,
+      child: Row(
+        children: [
+          LiquidIconBadge(icon: icon, color: color, size: 42, iconSize: 20),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(label, style: Theme.of(context).textTheme.titleMedium),
+                    ),
+                    Text(
+                      value,
+                      style: GoogleFonts.inter(
+                        color: color,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 9),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(999),
+                  child: LinearProgressIndicator(
+                    value: progress,
+                    minHeight: 7,
+                    backgroundColor: AppTheme.border,
+                    valueColor: AlwaysStoppedAnimation<Color>(color),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ProfileAccountButton extends ConsumerWidget {
+  final int level;
+  const _ProfileAccountButton({required this.level});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return GestureDetector(
+      onTap: () => _showProfileAccountModal(context, ref, level),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: AppTheme.primary.withValues(alpha: 0.14),
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(color: AppTheme.primary.withValues(alpha: 0.38), width: 1.2),
+          boxShadow: [
+            BoxShadow(
+              color: AppTheme.primary.withValues(alpha: 0.16),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.auto_awesome_rounded, color: AppTheme.primary, size: 14),
+            const SizedBox(width: 6),
+            Text(
+              'Lv.$level',
+              style: GoogleFonts.outfit(
+                color: AppTheme.primary,
+                fontWeight: FontWeight.w800,
+                fontSize: 13,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Container(
+              width: 1,
+              height: 12,
+              color: AppTheme.primary.withValues(alpha: 0.35),
+            ),
+            const SizedBox(width: 8),
+            const Icon(Icons.person_rounded, color: AppTheme.primary, size: 16),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showProfileAccountModal(BuildContext context, WidgetRef ref, int level) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) {
+        return Container(
+          padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
+          decoration: BoxDecoration(
+            color: AppTheme.surfaceCard,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+            border: Border.all(color: AppTheme.glassStroke, width: 1.2),
+            boxShadow: AppTheme.cardShadow,
+          ),
+          child: SafeArea(
+            top: false,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 44,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: AppTheme.textSecondary.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    Container(
+                      width: 58,
+                      height: 58,
+                      decoration: BoxDecoration(
+                        color: AppTheme.primary.withValues(alpha: 0.15),
+                        shape: BoxShape.circle,
+                        border: Border.all(color: AppTheme.primary.withValues(alpha: 0.4), width: 1.5),
+                      ),
+                      child: const Icon(Icons.shield_rounded, color: AppTheme.primary, size: 30),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Cyber Guardian',
+                            style: GoogleFonts.outfit(
+                              color: AppTheme.textPrimary,
+                              fontSize: 20,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            'Level $level Protected Account',
+                            style: GoogleFonts.inter(
+                              color: AppTheme.primary,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppTheme.background.withValues(alpha: 0.5),
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(color: AppTheme.border),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.cloud_done_rounded, color: AppTheme.primary, size: 22),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Encrypted Cloud Sync',
+                              style: GoogleFonts.outfit(
+                                color: AppTheme.textPrimary,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              'All streaks and protection rules active',
+                              style: GoogleFonts.inter(
+                                color: AppTheme.textSecondary,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 28),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () async {
+                      Navigator.of(context).pop();
+                      _showLogoutConfirmDialog(context, ref);
+                    },
+                    icon: const Icon(Icons.logout_rounded, size: 19),
+                    label: const Text('Sign Out of Account'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.error.withValues(alpha: 0.16),
+                      foregroundColor: AppTheme.error,
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      side: BorderSide(color: AppTheme.error.withValues(alpha: 0.45), width: 1.2),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                      textStyle: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w700),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _showLogoutConfirmDialog(BuildContext context, WidgetRef ref) {
+    showGeneralDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: 'Dismiss',
+      barrierColor: Colors.black.withValues(alpha: 0.72),
+      transitionDuration: const Duration(milliseconds: 260),
+      pageBuilder: (context, anim1, anim2) {
+        return Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 28),
+            child: Material(
+              color: Colors.transparent,
+              child: LiquidGlassPanel(
+                padding: const EdgeInsets.all(24),
+                radius: 28,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 60,
+                      height: 60,
+                      decoration: BoxDecoration(
+                        color: AppTheme.error.withValues(alpha: 0.15),
+                        shape: BoxShape.circle,
+                        border: Border.all(color: AppTheme.error.withValues(alpha: 0.4), width: 1.5),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppTheme.error.withValues(alpha: 0.25),
+                            blurRadius: 16,
+                          ),
+                        ],
+                      ),
+                      child: const Icon(
+                        Icons.logout_rounded,
+                        color: AppTheme.error,
+                        size: 28,
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+                    Text(
+                      'Sign Out of MindProtection?',
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.outfit(
+                        color: AppTheme.textPrimary,
+                        fontSize: 22,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Your streaks, guardian level, and daily focus sessions will remain synced to your cloud account.',
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.inter(
+                        color: AppTheme.textSecondary,
+                        fontSize: 13,
+                        height: 1.4,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () => Navigator.of(context).pop(),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: AppTheme.textPrimary,
+                              side: BorderSide(color: AppTheme.glassStroke, width: 1.2),
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                            ),
+                            child: const Text('Cancel'),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: () async {
+                              Navigator.of(context).pop();
+                              await ref.read(authServiceProvider).signOut();
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppTheme.error,
+                              foregroundColor: Colors.white,
+                              elevation: 0,
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                            ),
+                            child: const Text('Sign Out'),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+      transitionBuilder: (context, anim1, anim2, child) {
+        return ScaleTransition(
+          scale: Tween<double>(begin: 0.9, end: 1.0).animate(
+            CurvedAnimation(parent: anim1, curve: Curves.easeOutCubic),
+          ),
+          child: FadeTransition(opacity: anim1, child: child),
+        );
+      },
     );
   }
 }
