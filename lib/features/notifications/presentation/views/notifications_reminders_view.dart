@@ -117,33 +117,42 @@ class _NotificationsRemindersViewState extends ConsumerState<NotificationsRemind
                     child: TabBar(
                       controller: _tabController,
                       indicatorSize: TabBarIndicatorSize.tab,
+                      labelPadding: const EdgeInsets.symmetric(horizontal: 6),
                       onTap: (_) => HapticFeedback.selectionClick(),
                       tabs: [
-                        const Tab(text: '🔔 Push Reminders'),
+                        const Tab(
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text('🔔 Push Reminders'),
+                          ),
+                        ),
                         Tab(
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Text('🛡️ Notification Vault'),
-                              if (stateAsync.value?.vaultItems.isNotEmpty == true) ...[
-                                const SizedBox(width: 6),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                  decoration: BoxDecoration(
-                                    color: AppTheme.primary,
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  child: Text(
-                                    '${stateAsync.value!.vaultItems.length}',
-                                    style: const TextStyle(
-                                      color: Colors.black,
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w800,
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Text('🛡️ Notification Vault'),
+                                if (stateAsync.value?.vaultItems.isNotEmpty == true) ...[
+                                  const SizedBox(width: 6),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: AppTheme.primary,
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    child: Text(
+                                      '${stateAsync.value!.vaultItems.length}',
+                                      style: const TextStyle(
+                                        color: Colors.black,
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w800,
+                                      ),
                                     ),
                                   ),
-                                ),
+                                ],
                               ],
-                            ],
+                            ),
                           ),
                         ),
                       ],
@@ -611,6 +620,9 @@ class _ReminderToggleCard extends StatelessWidget {
                 value: isActive,
                 onChanged: onToggle,
                 activeThumbColor: AppTheme.primary,
+                activeTrackColor: AppTheme.primary.withValues(alpha: 0.35),
+                inactiveThumbColor: AppTheme.textHint,
+                inactiveTrackColor: AppTheme.surfaceRaised,
               ),
             ],
           ),
@@ -715,6 +727,9 @@ class _SimpleToggleCard extends StatelessWidget {
             value: isActive,
             onChanged: onToggle,
             activeThumbColor: AppTheme.primary,
+            activeTrackColor: AppTheme.primary.withValues(alpha: 0.35),
+            inactiveThumbColor: AppTheme.textHint,
+            inactiveTrackColor: AppTheme.surfaceRaised,
           ),
         ],
       ),

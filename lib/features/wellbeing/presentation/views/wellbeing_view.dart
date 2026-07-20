@@ -417,13 +417,7 @@ class _MoodCard extends StatelessWidget {
   });
 
   static const labels = ['Bad', 'Low', 'OK', 'Good', 'Great'];
-  static const icons = [
-    Icons.sentiment_very_dissatisfied_rounded,
-    Icons.sentiment_dissatisfied_rounded,
-    Icons.sentiment_neutral_rounded,
-    Icons.sentiment_satisfied_alt_rounded,
-    Icons.sentiment_very_satisfied_rounded,
-  ];
+  static const emojis = ['😭', '😢', '😐', '😊', '🥳'];
 
   @override
   Widget build(BuildContext context) {
@@ -455,7 +449,7 @@ class _MoodCard extends StatelessWidget {
                 ),
               ),
               Text(
-                labels[safeMood - 1],
+                '${labels[safeMood - 1]} ${emojis[safeMood - 1]}',
                 style: GoogleFonts.outfit(
                   color: AppTheme.accent,
                   fontWeight: FontWeight.w900,
@@ -503,10 +497,11 @@ class _MoodCard extends StatelessWidget {
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(
-                              icons[index],
-                              color: isSelected ? AppTheme.accent : AppTheme.textSecondary,
-                              size: isSelected ? 26 : 22,
+                            Text(
+                              emojis[index],
+                              style: TextStyle(
+                                fontSize: isSelected ? 26 : 22,
+                              ),
                             ),
                             const SizedBox(height: 4),
                             FittedBox(

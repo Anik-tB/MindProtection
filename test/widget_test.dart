@@ -37,10 +37,11 @@ void main() {
         child: const MindProtectionApp(),
       ),
     );
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 800));
 
     // Verify that the login screen elements are present initially.
-    expect(find.text('Welcome Back'), findsOneWidget);
-    expect(find.text('SIGN IN'), findsOneWidget);
+    expect(find.text('MindProtection'), findsOneWidget);
+    expect(find.text('Sign in'), findsAtLeast(1));
   });
 }

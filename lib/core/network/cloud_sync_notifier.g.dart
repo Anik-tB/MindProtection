@@ -6,7 +6,7 @@ part of 'cloud_sync_notifier.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$cloudSyncNotifierHash() => r'5283828fa595db0ec806f490347d18befe92023f';
+String _$cloudSyncNotifierHash() => r'2db8ea1ad79ffd0a51239343421d03b1d4207531';
 
 /// See also [CloudSyncNotifier].
 @ProviderFor(CloudSyncNotifier)

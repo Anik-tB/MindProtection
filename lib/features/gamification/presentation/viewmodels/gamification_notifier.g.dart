@@ -6,7 +6,7 @@ part of 'gamification_notifier.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$gamificationHash() => r'd388940f4ae213cded9197aa674658ded8154d58';
+String _$gamificationHash() => r'0f86f0e7e32f7f638b861d2f5baf480dbe6f518f';
 
 /// See also [Gamification].
 @ProviderFor(Gamification)

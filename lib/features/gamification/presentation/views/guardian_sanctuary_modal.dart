@@ -372,13 +372,18 @@ class _GuardianSanctuaryModalState extends ConsumerState<GuardianSanctuaryModal>
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      _getGuardianTitle(stats.level),
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color: AppTheme.secondary,
-                        fontWeight: FontWeight.w700,
+                    Expanded(
+                      child: Text(
+                        _getGuardianTitle(stats.level),
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          color: AppTheme.secondary,
+                          fontWeight: FontWeight.w700,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
+                    const SizedBox(width: 12),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                       decoration: BoxDecoration(
@@ -688,12 +693,14 @@ class _GuardianSanctuaryModalState extends ConsumerState<GuardianSanctuaryModal>
                     children: [
                       const Icon(Icons.auto_awesome_rounded, color: AppTheme.accent, size: 18),
                       const SizedBox(width: 8),
-                      Text(
-                        'Milestone Reward: +${trophy.xpReward} XP & +${trophy.coinReward} Coins',
-                        style: GoogleFonts.inter(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          color: AppTheme.textPrimary,
+                      Flexible(
+                        child: Text(
+                          'Milestone Reward: +${trophy.xpReward} XP & +${trophy.coinReward} Coins',
+                          style: GoogleFonts.inter(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: AppTheme.textPrimary,
+                          ),
                         ),
                       ),
                     ],
@@ -714,12 +721,14 @@ class _GuardianSanctuaryModalState extends ConsumerState<GuardianSanctuaryModal>
                       children: [
                         const Icon(Icons.lock_outline_rounded, size: 18, color: AppTheme.textSecondary),
                         const SizedBox(width: 8),
-                        Text(
-                          'Locked — Keep Training',
-                          style: GoogleFonts.inter(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                            color: AppTheme.textSecondary,
+                        Flexible(
+                          child: Text(
+                            'Locked — Keep Training',
+                            style: GoogleFonts.inter(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: AppTheme.textSecondary,
+                            ),
                           ),
                         ),
                       ],
@@ -740,12 +749,14 @@ class _GuardianSanctuaryModalState extends ConsumerState<GuardianSanctuaryModal>
                       children: [
                         const Icon(Icons.check_circle_rounded, size: 18, color: AppTheme.primaryLight),
                         const SizedBox(width: 8),
-                        Text(
-                          'Reward Claimed ✔',
-                          style: GoogleFonts.inter(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                            color: AppTheme.primaryLight,
+                        Flexible(
+                          child: Text(
+                            'Reward Claimed ✔',
+                            style: GoogleFonts.inter(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: AppTheme.primaryLight,
+                            ),
                           ),
                         ),
                       ],

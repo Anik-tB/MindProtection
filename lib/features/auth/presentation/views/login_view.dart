@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:mind_protection/core/network/supabase_auth_service.dart';
 import 'package:mind_protection/core/theme/app_theme.dart';
 import 'package:mind_protection/core/ui/liquid_glass.dart';
+import 'package:mind_protection/features/auth/presentation/views/auth_shared_widgets.dart';
 import 'package:mind_protection/features/auth/presentation/views/register_view.dart';
 
 class LoginView extends ConsumerStatefulWidget {
@@ -22,30 +23,48 @@ class _LoginViewState extends ConsumerState<LoginView>
   bool _isLoading = false;
   bool _obscurePassword = true;
 
-  late final AnimationController _fadeController;
+  late final AnimationController _animController;
   late final Animation<double> _fadeAnim;
   late final Animation<Offset> _slideAnim;
+  late final Animation<double> _scaleAnim;
+  late final Animation<double> _orb1Anim;
+  late final Animation<double> _orb2Anim;
 
   @override
   void initState() {
     super.initState();
-    _fadeController = AnimationController(
+    _animController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 720),
+      duration: const Duration(milliseconds: 900),
     );
-    _fadeAnim = CurvedAnimation(parent: _fadeController, curve: Curves.easeOut);
+    _fadeAnim = CurvedAnimation(parent: _animController, curve: Curves.easeOut);
     _slideAnim = Tween<Offset>(
-      begin: const Offset(0, 0.04),
+      begin: const Offset(0, 0.06),
       end: Offset.zero,
-    ).animate(CurvedAnimation(parent: _fadeController, curve: Curves.easeOutCubic));
-    _fadeController.forward();
+    ).animate(CurvedAnimation(parent: _animController, curve: Curves.easeOutCubic));
+    _scaleAnim = Tween<double>(begin: 0.94, end: 1.0).animate(
+      CurvedAnimation(parent: _animController, curve: Curves.easeOutCubic),
+    );
+    _orb1Anim = Tween<double>(begin: 0, end: 1).animate(
+      CurvedAnimation(
+        parent: _animController,
+        curve: const Interval(0.0, 0.6, curve: Curves.easeOut),
+      ),
+    );
+    _orb2Anim = Tween<double>(begin: 0, end: 1).animate(
+      CurvedAnimation(
+        parent: _animController,
+        curve: const Interval(0.1, 0.7, curve: Curves.easeOut),
+      ),
+    );
+    _animController.forward();
   }
 
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
-    _fadeController.dispose();
+    _animController.dispose();
     super.dispose();
   }
 
@@ -79,167 +98,196 @@ class _LoginViewState extends ConsumerState<LoginView>
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: LiquidBackground(
-        child: SafeArea(
-          child: Center(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(24, 32, 24, 32),
-              child: FadeTransition(
-                opacity: _fadeAnim,
-                child: SlideTransition(
-                  position: _slideAnim,
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 430),
-                    child: Form(
-                      key: _formKey,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          const _AuthMark(icon: Icons.security_rounded),
-                          const SizedBox(height: 26),
-                          Text(
-                            'MindProtection',
-                            textAlign: TextAlign.center,
-                            style: GoogleFonts.outfit(
-                              color: AppTheme.textPrimary,
-                              fontSize: 34,
-                              fontWeight: FontWeight.w900,
-                              height: 1.05,
-                            ),
+        child: Stack(
+          children: [
+            // ── Decorative ambient orbs ──
+            AnimatedBuilder(
+              animation: _animController,
+              builder: (context, _) => Stack(
+                children: [
+                  Positioned(
+                    top: -size.height * 0.08,
+                    right: -size.width * 0.22,
+                    child: Opacity(
+                      opacity: _orb1Anim.value * 0.55,
+                      child: Container(
+                        width: size.width * 0.82,
+                        height: size.width * 0.82,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: RadialGradient(
+                            colors: [
+                              AppTheme.primary.withValues(alpha: 0.22),
+                              AppTheme.primary.withValues(alpha: 0.0),
+                            ],
                           ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Protect focus, health, and recovery with one calm system.',
-                            textAlign: TextAlign.center,
-                            style: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    bottom: size.height * 0.05,
+                    left: -size.width * 0.30,
+                    child: Opacity(
+                      opacity: _orb2Anim.value * 0.40,
+                      child: Container(
+                        width: size.width * 0.75,
+                        height: size.width * 0.75,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: RadialGradient(
+                            colors: [
+                              AppTheme.secondary.withValues(alpha: 0.20),
+                              AppTheme.secondary.withValues(alpha: 0.0),
+                            ],
                           ),
-                          const SizedBox(height: 32),
-                          LiquidGlassPanel(
-                            padding: const EdgeInsets.all(20),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // ── Main content ──
+            SafeArea(
+              child: Center(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(24, 28, 24, 32),
+                  child: FadeTransition(
+                    opacity: _fadeAnim,
+                    child: SlideTransition(
+                      position: _slideAnim,
+                      child: ScaleTransition(
+                        scale: _scaleAnim,
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 430),
+                          child: Form(
+                            key: _formKey,
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
-                                Text(
-                                  'Sign in',
-                                  style: Theme.of(context).textTheme.titleLarge,
-                                ),
-                                const SizedBox(height: 16),
-                                TextFormField(
-                                  controller: _emailController,
-                                  keyboardType: TextInputType.emailAddress,
-                                  style: const TextStyle(color: AppTheme.textPrimary),
-                                  decoration: const InputDecoration(
-                                    labelText: 'Email address',
-                                    prefixIcon: Icon(Icons.email_outlined),
-                                  ),
-                                  validator: (value) {
-                                    if (value == null || value.isEmpty) {
-                                      return 'Please enter your email';
-                                    }
-                                    if (!RegExp(r'^[\w.\-]+@([\w-]+\.)+[\w-]{2,4}$')
-                                        .hasMatch(value)) {
-                                      return 'Please enter a valid email address';
-                                    }
-                                    return null;
-                                  },
-                                ),
-                                const SizedBox(height: 14),
-                                TextFormField(
-                                  controller: _passwordController,
-                                  obscureText: _obscurePassword,
-                                  style: const TextStyle(color: AppTheme.textPrimary),
-                                  decoration: InputDecoration(
-                                    labelText: 'Password',
-                                    prefixIcon: const Icon(Icons.lock_outlined),
-                                    suffixIcon: IconButton(
-                                      tooltip: _obscurePassword
-                                          ? 'Show password'
-                                          : 'Hide password',
-                                      icon: Icon(
-                                        _obscurePassword
-                                            ? Icons.visibility_off_outlined
-                                            : Icons.visibility_outlined,
+                                // ── Brand Hero ──
+                                const AuthBrandHero(),
+                                const SizedBox(height: 26),
+
+                                // ── Trust badges ──
+                                const AuthTrustBadgeRow(),
+                                const SizedBox(height: 28),
+
+                                // ── Form card ──
+                                AuthCard(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                                    children: [
+                                      const AuthSectionLabel(
+                                        label: 'SIGN IN TO YOUR VAULT',
+                                        icon: Icons.lock_open_rounded,
                                       ),
-                                      onPressed: () {
-                                        HapticFeedback.selectionClick();
-                                        setState(
+                                      const SizedBox(height: 20),
+                                      AuthPremiumField(
+                                        controller: _emailController,
+                                        label: 'Email Address',
+                                        hint: 'name@example.com',
+                                        icon: Icons.alternate_email_rounded,
+                                        keyboardType: TextInputType.emailAddress,
+                                        validator: (val) {
+                                          if (val == null || val.isEmpty) return 'Enter your email';
+                                          if (!val.contains('@')) return 'Enter a valid email';
+                                          return null;
+                                        },
+                                      ),
+                                      const SizedBox(height: 14),
+                                      AuthPremiumField(
+                                        controller: _passwordController,
+                                        label: 'Password',
+                                        hint: '••••••••',
+                                        icon: Icons.lock_outline_rounded,
+                                        obscureText: _obscurePassword,
+                                        onToggleObscure: () => setState(
                                           () => _obscurePassword = !_obscurePassword,
+                                        ),
+                                        validator: (val) {
+                                          if (val == null || val.isEmpty) return 'Enter your password';
+                                          if (val.length < 6) return 'At least 6 characters';
+                                          return null;
+                                        },
+                                      ),
+                                      const SizedBox(height: 24),
+                                      GradientActionButton(
+                                        label: _isLoading
+                                            ? 'Signing in...'
+                                            : 'Sign in to MindProtection',
+                                        icon: _isLoading ? null : Icons.shield_rounded,
+                                        onPressed: _isLoading ? null : _handleLogin,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+
+                                const SizedBox(height: 24),
+
+                                // ── Register link ──
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      'New Guardian? ',
+                                      style: GoogleFonts.inter(
+                                        color: AppTheme.textSecondary,
+                                        fontSize: 13.5,
+                                      ),
+                                    ),
+                                    GestureDetector(
+                                      onTap: () {
+                                        HapticFeedback.lightImpact();
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => const RegisterView(),
+                                          ),
                                         );
                                       },
+                                      child: ShaderMask(
+                                        shaderCallback: (bounds) =>
+                                            AppTheme.primaryGradient.createShader(bounds),
+                                        child: Text(
+                                          'Create your account →',
+                                          style: GoogleFonts.inter(
+                                            color: Colors.white,
+                                            fontSize: 13.5,
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                        ),
+                                      ),
                                     ),
-                                  ),
-                                  validator: (value) {
-                                    if (value == null || value.isEmpty) {
-                                      return 'Please enter your password';
-                                    }
-                                    if (value.length < 6) {
-                                      return 'Password must be at least 6 characters';
-                                    }
-                                    return null;
-                                  },
+                                  ],
                                 ),
-                                const SizedBox(height: 20),
-                                GradientActionButton(
-                                  label: _isLoading ? 'Signing in...' : 'Sign in',
-                                  icon: _isLoading ? null : Icons.arrow_forward_rounded,
-                                  onPressed: _isLoading ? null : _handleLogin,
+                                const SizedBox(height: 8),
+                                Text(
+                                  'Protected by end-to-end encryption',
+                                  textAlign: TextAlign.center,
+                                  style: GoogleFonts.inter(
+                                    color: AppTheme.textHint,
+                                    fontSize: 11,
+                                  ),
                                 ),
                               ],
                             ),
                           ),
-                          const SizedBox(height: 24),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                "Don't have an account? ",
-                                style: Theme.of(context).textTheme.bodyMedium,
-                              ),
-                              TextButton(
-                                onPressed: () {
-                                  HapticFeedback.lightImpact();
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute(builder: (_) => const RegisterView()),
-                                  );
-                                },
-                                child: const Text('Create one'),
-                              ),
-                            ],
-                          ),
-                        ],
+                        ),
                       ),
                     ),
                   ),
                 ),
               ),
             ),
-          ),
+          ],
         ),
-      ),
-    );
-  }
-}
-
-class _AuthMark extends StatelessWidget {
-  final IconData icon;
-
-  const _AuthMark({required this.icon});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Container(
-        width: 92,
-        height: 92,
-        decoration: BoxDecoration(
-          gradient: AppTheme.primaryGradient,
-          borderRadius: BorderRadius.circular(28),
-          border: Border.all(color: AppTheme.onPrimary.withValues(alpha: 0.7)),
-          boxShadow: AppTheme.primaryGlow,
-        ),
-        child: Icon(icon, color: AppTheme.onPrimary, size: 44),
       ),
     );
   }

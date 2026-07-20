@@ -6,7 +6,7 @@ part of 'app_blocker_notifier.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$appBlockerHash() => r'ff7b60a80cd990ca4d5c42f38a20540649823ce3';
+String _$appBlockerHash() => r'84f7f43d44661f2c3f7a787f62836e390f970bb3';
 
 /// See also [AppBlocker].
 @ProviderFor(AppBlocker)

@@ -518,8 +518,8 @@ class _LiquidFieldPainter extends CustomPainter {
     final topOrbPaint = Paint()
       ..shader = RadialGradient(
         colors: [
-          const Color(0xFF00F5A0).withValues(alpha: 0.14),
-          const Color(0xFF00D4FF).withValues(alpha: 0.06),
+          AppTheme.primary.withValues(alpha: 0.16),
+          AppTheme.primaryDark.withValues(alpha: 0.08),
           Colors.transparent,
         ],
         stops: const [0.0, 0.5, 1.0],
@@ -536,8 +536,8 @@ class _LiquidFieldPainter extends CustomPainter {
     final bottomOrbPaint = Paint()
       ..shader = RadialGradient(
         colors: [
-          const Color(0xFF00D4FF).withValues(alpha: 0.12),
-          const Color(0xFF8A2BE2).withValues(alpha: 0.05),
+          AppTheme.secondary.withValues(alpha: 0.14),
+          AppTheme.primaryDark.withValues(alpha: 0.06),
           Colors.transparent,
         ],
         stops: const [0.0, 0.6, 1.0],
@@ -546,8 +546,8 @@ class _LiquidFieldPainter extends CustomPainter {
 
     // Smooth Aurora Wave 1
     final bandPaint1 = Paint()
-      ..shader = const LinearGradient(
-        colors: [Color(0x1A00F5A0), Color(0x0000F5A0)],
+      ..shader = LinearGradient(
+        colors: [AppTheme.primary.withValues(alpha: 0.12), Colors.transparent],
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
       ).createShader(Offset.zero & size);
@@ -575,8 +575,8 @@ class _LiquidFieldPainter extends CustomPainter {
 
     // Smooth Aurora Wave 2
     final bandPaint2 = Paint()
-      ..shader = const LinearGradient(
-        colors: [Color(0x1800D4FF), Color(0x0000D4FF)],
+      ..shader = LinearGradient(
+        colors: [AppTheme.secondary.withValues(alpha: 0.1), Colors.transparent],
         begin: Alignment.bottomRight,
         end: Alignment.topLeft,
       ).createShader(Offset.zero & size);

@@ -9,6 +9,8 @@ import '../../../blocking/presentation/views/app_blocker_view.dart';
 import '../../../blocking/presentation/viewmodels/app_blocker_notifier.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/network/supabase_auth_service.dart';
+import '../../../security/presentation/viewmodels/pin_security_provider.dart';
+import '../../../security/presentation/views/pin_verification_screen.dart';
 
 class RecoveryView extends ConsumerStatefulWidget {
   const RecoveryView({super.key});
@@ -58,6 +60,23 @@ class _RecoveryViewState extends ConsumerState<RecoveryView>
         _isDeviceAdminGranted   = admin;
       });
     }
+  }
+
+  Future<bool> _challengePinIfNeeded() async {
+    final securityState = ref.read(pinSecurityProvider);
+    if (securityState.pinHash.isNotEmpty && securityState.isSettingGuardEnabled) {
+      final verified = await Navigator.push<bool>(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const PinVerificationScreen(
+            isModal: true,
+            title: 'Verify PIN to Modify Guards',
+          ),
+        ),
+      );
+      return verified == true;
+    }
+    return true;
   }
 
   void _showLogDialog(BuildContext context, {required bool isRelapse}) {
@@ -459,9 +478,11 @@ class _RecoveryViewState extends ConsumerState<RecoveryView>
                 icon: Icons.vpn_lock_rounded,
                 color: AppTheme.error,
                 isActive: recoveryState.isAdultBlockerActive,
-                onChanged: (value) {
+                onChanged: (value) async {
                   HapticFeedback.mediumImpact();
-                  recoveryNotifier.toggleAdultBlocker();
+                  if (await _challengePinIfNeeded()) {
+                    recoveryNotifier.toggleAdultBlocker();
+                  }
                 },
               ),
               const SizedBox(height: 10),
@@ -471,12 +492,14 @@ class _RecoveryViewState extends ConsumerState<RecoveryView>
                 icon: Icons.visibility_off_rounded,
                 color: AppTheme.secondary,
                 isActive: recoveryState.isShortsBlockerActive,
-                onChanged: (value) {
+                onChanged: (value) async {
                   HapticFeedback.mediumImpact();
-                  recoveryNotifier.toggleShortsBlocker();
-                  if (value) {
-                    ref.read(appBlockerProvider.notifier).addCustomApp('com.zhiliaoapp.musically');
-                    ref.read(appBlockerProvider.notifier).addCustomApp('com.google.android.youtube');
+                  if (await _challengePinIfNeeded()) {
+                    recoveryNotifier.toggleShortsBlocker();
+                    if (value) {
+                      ref.read(appBlockerProvider.notifier).addCustomApp('com.zhiliaoapp.musically');
+                      ref.read(appBlockerProvider.notifier).addCustomApp('com.google.android.youtube');
+                    }
                   }
                 },
               ),
@@ -487,13 +510,15 @@ class _RecoveryViewState extends ConsumerState<RecoveryView>
                 icon: Icons.app_blocking_rounded,
                 color: AppTheme.primary,
                 isActive: recoveryState.isAppLimiterActive,
-                onChanged: (value) {
+                onChanged: (value) async {
                   HapticFeedback.mediumImpact();
-                  recoveryNotifier.toggleAppLimiter();
-                  if (value) {
-                    ref.read(appBlockerProvider.notifier).addCustomApp('com.instagram.android');
-                    ref.read(appBlockerProvider.notifier).addCustomApp('com.twitter.android');
-                    ref.read(appBlockerProvider.notifier).addCustomApp('com.facebook.katana');
+                  if (await _challengePinIfNeeded()) {
+                    recoveryNotifier.toggleAppLimiter();
+                    if (value) {
+                      ref.read(appBlockerProvider.notifier).addCustomApp('com.instagram.android');
+                      ref.read(appBlockerProvider.notifier).addCustomApp('com.twitter.android');
+                      ref.read(appBlockerProvider.notifier).addCustomApp('com.facebook.katana');
+                    }
                   }
                 },
               ),
@@ -601,12 +626,27 @@ class _AppBlockerEntryCard extends ConsumerWidget {
     final count = blockedAsync.value?.length ?? 0;
 
     return GestureDetector(
-      onTap: () {
+      onTap: () async {
         HapticFeedback.lightImpact();
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const AppBlockerView()),
-        );
+        final securityState = ref.read(pinSecurityProvider);
+        if (securityState.pinHash.isNotEmpty && securityState.isSettingGuardEnabled) {
+          final verified = await Navigator.push<bool>(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const PinVerificationScreen(
+                isModal: true,
+                title: 'Verify PIN to Open Blocker',
+              ),
+            ),
+          );
+          if (verified != true) return;
+        }
+        if (context.mounted) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const AppBlockerView()),
+          );
+        }
       },
       child: Container(
         padding: const EdgeInsets.all(18),

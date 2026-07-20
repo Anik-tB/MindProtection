@@ -2,69 +2,69 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
-  static const Color background = Color(0xFF070A14);
-  static const Color surfaceSoft = Color(0xFF0E1428);
-  static const Color surfaceCard = Color(0xD90D1224);
-  static const Color surfaceRaised = Color(0xFF141D38);
-  static const Color surfaceTint = Color(0xFF1A264A);
+  static const Color background = Color(0xFF0F0908);
+  static const Color surfaceSoft = Color(0xFF160E0B);
+  static const Color surfaceCard = Color(0xD91D120F);
+  static const Color surfaceRaised = Color(0xFF261915);
+  static const Color surfaceTint = Color(0xFF33211B);
 
-  static const Color primary = Color(0xFF00F5A0);
-  static const Color primaryDark = Color(0xFF009E6B);
-  static const Color primarySoft = Color(0xFF0F362A);
-  static const Color primaryLight = Color(0x2600F5A0);
-  static const Color secondary = Color(0xFF00D4FF);
-  static const Color secondaryLight = Color(0x2600D4FF);
-  static const Color accent = Color(0xFFFFB800);
-  static const Color accentLight = Color(0x26FFB800);
+  static const Color primary = Color(0xFFF39C12);
+  static const Color primaryDark = Color(0xFFD35400);
+  static const Color primarySoft = Color(0xFF2C140A);
+  static const Color primaryLight = Color(0x26F39C12);
+  static const Color secondary = Color(0xFFE67E22);
+  static const Color secondaryLight = Color(0x26E67E22);
+  static const Color accent = Color(0xFFC0392B);
+  static const Color accentLight = Color(0x26C0392B);
 
-  static const Color error = Color(0xFFFF3366);
-  static const Color warning = Color(0xFFFF7A00);
-  static const Color info = Color(0xFF3399FF);
+  static const Color error = Color(0xFFA93226);
+  static const Color warning = Color(0xFFD35400);
+  static const Color info = Color(0xFFF39C12);
 
-  static const Color textPrimary = Color(0xFFF5F7FF);
-  static const Color textSecondary = Color(0xFF94A2C8);
-  static const Color textHint = Color(0xFF5A678F);
-  static const Color textDisabled = Color(0xFF3B4466);
-  static const Color onPrimary = Color(0xFF060E1A);
+  static const Color textPrimary = Color(0xFFFFF7F2);
+  static const Color textSecondary = Color(0xFFD8BFB5);
+  static const Color textHint = Color(0xFF9C8176);
+  static const Color textDisabled = Color(0xFF5D4B43);
+  static const Color onPrimary = Color(0xFF0F0908);
 
-  static const Color border = Color(0xFF1E2A4D);
-  static const Color borderAccent = Color(0x6600F5A0);
-  static const Color borderViolet = Color(0x6600D4FF);
-  static const Color glassFill = Color(0xB80E1428);
-  static const Color glassStroke = Color(0x4000F5A0);
+  static const Color border = Color(0x2ED35400);
+  static const Color borderAccent = Color(0x66F39C12);
+  static const Color borderViolet = Color(0x66E67E22);
+  static const Color glassFill = Color(0xBA160E0B);
+  static const Color glassStroke = Color(0x40F39C12);
 
   static const LinearGradient primaryGradient = LinearGradient(
-    colors: [Color(0xFF00F5A0), Color(0xFF00D4FF)],
+    colors: [Color(0xFFF39C12), Color(0xFFE67E22)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
   static const LinearGradient violetGradient = LinearGradient(
-    colors: [Color(0xFF00D4FF), Color(0xFF8A2BE2)],
+    colors: [Color(0xFFE67E22), Color(0xFFC0392B)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
   static const LinearGradient amberGradient = LinearGradient(
-    colors: [Color(0xFFFFB800), Color(0xFFFF8A00)],
+    colors: [Color(0xFFD35400), Color(0xFFF39C12)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
   static const LinearGradient heroGradient = LinearGradient(
-    colors: [Color(0xFF152042), Color(0xFF0E1428), Color(0xFF070A14)],
+    colors: [Color(0xFF2A150F), Color(0xFF160E0B), Color(0xFF0F0908)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
   static const LinearGradient cardGradient = LinearGradient(
-    colors: [Color(0xEA141E3A), Color(0xC70E1428)],
+    colors: [Color(0xEA261915), Color(0xC7160E0B)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
   static const LinearGradient pageGradient = LinearGradient(
-    colors: [Color(0xFF0B1021), Color(0xFF070A14), Color(0xFF05070E)],
+    colors: [Color(0xFF1A0E0A), Color(0xFF0F0908), Color(0xFF080504)],
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
   );

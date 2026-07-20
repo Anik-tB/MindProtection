@@ -38,7 +38,8 @@ class MainNavigationShell extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final selectedIndex = ref.watch(navigationIndexProvider);
+    final rawIndex = ref.watch(navigationIndexProvider);
+    final selectedIndex = rawIndex.clamp(0, _screens.length - 1);
 
     return Scaffold(
       extendBody: true,

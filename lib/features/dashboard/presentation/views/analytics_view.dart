@@ -11,6 +11,7 @@ import '../../../blocking/data/services/android_blocking_service.dart';
 import '../../../focus/presentation/viewmodels/focus_timer_notifier.dart';
 import '../../../focus/presentation/views/subject_focus_breakdown_card.dart';
 import '../viewmodels/screen_time_provider.dart';
+import '../../../ai_coach/presentation/viewmodels/smart_insights_provider.dart';
 
 class AnalyticsView extends ConsumerWidget {
   const AnalyticsView({super.key});
@@ -49,6 +50,8 @@ class AnalyticsView extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _InsightsHeader(minutes: minutes),
+          const SizedBox(height: 14),
+          const _AiSmartInsightsSection(),
           const SizedBox(height: 14),
           _BarChartCard(minutes: minutes, weekdays: weekdays),
           const SizedBox(height: 14),
@@ -1081,6 +1084,103 @@ class _PermissionPromptContent extends StatelessWidget {
                   color: AppTheme.onPrimary,
                 ),
               ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _AiSmartInsightsSection extends ConsumerWidget {
+  const _AiSmartInsightsSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final insightsAsync = ref.watch(smartInsightsProvider);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SectionTitle(title: 'AI Smart Insights'),
+        const SizedBox(height: 12),
+        insightsAsync.when(
+          data: (insights) {
+            return Column(
+              children: insights.map((insight) {
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: LiquidGlassPanel(
+                    padding: const EdgeInsets.all(16),
+                    radius: 20,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            LiquidIconBadge(
+                              icon: insight.icon,
+                              color: insight.color,
+                              size: 40,
+                              iconSize: 20,
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                insight.title,
+                                style: GoogleFonts.outfit(
+                                  color: AppTheme.textPrimary,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            StatusPill(
+                              label: insight.valueText,
+                              color: insight.color,
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          insight.description,
+                          style: GoogleFonts.inter(
+                            color: AppTheme.textSecondary,
+                            fontSize: 12,
+                            height: 1.45,
+                          ),
+                        ),
+                        if (insight.progress > 0.0) ...[
+                          const SizedBox(height: 12),
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(999),
+                            child: LinearProgressIndicator(
+                              value: insight.progress,
+                              minHeight: 6,
+                              backgroundColor: AppTheme.border,
+                              valueColor: AlwaysStoppedAnimation<Color>(insight.color),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                );
+              }).toList(),
+            );
+          },
+          loading: () => const Center(
+            child: Padding(
+              padding: EdgeInsets.symmetric(vertical: 24),
+              child: CircularProgressIndicator(),
+            ),
+          ),
+          error: (err, _) => Padding(
+            padding: const EdgeInsets.all(16),
+            child: Text(
+              'Failed to load insights: $err',
+              style: const TextStyle(color: AppTheme.error),
             ),
           ),
         ),

@@ -6,7 +6,7 @@ part of 'screen_time_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$screenTimeHash() => r'a7c880104ca8c2210a2612aadcbda8694d7dd242';
+String _$screenTimeHash() => r'86d476739e8522df249f3ea85de2f7b0b570cc96';
 
 /// See also [screenTime].
 @ProviderFor(screenTime)
