@@ -15,7 +15,10 @@ import '../../../notifications/presentation/views/notifications_reminders_view.d
 import '../../../auth/presentation/views/profile_account_view.dart';
 import 'analytics_view.dart';
 import '../../../ai_coach/presentation/views/ai_coach_chat_view.dart';
+import '../../../ai_coach/presentation/views/ai_smart_insights_card.dart';
 import '../../../community/presentation/views/community_hub_view.dart';
+import '../../../../core/ui/smooth_page_route.dart';
+import '../../../../core/ui/mind_protection_logo.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 final dashboardProfileProvider = FutureProvider<Map<String, String>>((
@@ -83,9 +86,8 @@ class DashboardView extends ConsumerWidget {
                             HapticFeedback.lightImpact();
                             Navigator.push(
                               context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    const ProfileAccountView(),
+                              SmoothPageRoute(
+                                page: const ProfileAccountView(),
                               ),
                             );
                           },
@@ -109,11 +111,9 @@ class DashboardView extends ConsumerWidget {
                                 ),
                                 child: ClipOval(
                                   child: profile['avatar'] == '🛡️'
-                                      ? Image.asset(
-                                          'assets/logo.png',
-                                          fit: BoxFit.cover,
-                                          width: 38,
-                                          height: 38,
+                                      ? const MindProtectionLogo(
+                                          size: 38,
+                                          showGlow: false,
                                         )
                                       : Center(
                                           child: Text(
@@ -536,6 +536,7 @@ class _ModernStatTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final extraWidget = extra;
     return LiquidGlassPanel(
       padding: const EdgeInsets.all(14),
       radius: 26,
@@ -553,7 +554,7 @@ class _ModernStatTile extends StatelessWidget {
                 ),
                 child: Icon(icon, color: color, size: 16),
               ),
-              ?extra,
+              ?extraWidget,
             ],
           ),
           const Spacer(),
@@ -620,6 +621,7 @@ class _TodayTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
       padding: const EdgeInsets.fromLTRB(20, 2, 20, 145),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -716,6 +718,17 @@ class _TodayTab extends StatelessWidget {
                 ),
               ),
             ],
+          ),
+          const SizedBox(height: 22),
+          AiSmartInsightsCard(
+            onAskCoachTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (ctx) => const AiCoachChatView(),
+                ),
+              );
+            },
           ),
           const SizedBox(height: 22),
           _MilestoneCard(streakDays: streakDays),
@@ -1040,7 +1053,7 @@ class _AiCoachButton extends ConsumerWidget {
         HapticFeedback.lightImpact();
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => const AiCoachChatView()),
+          SmoothPageRoute(page: const AiCoachChatView()),
         );
       },
       child: Container(
@@ -1070,7 +1083,7 @@ class _CommunityButton extends StatelessWidget {
         HapticFeedback.lightImpact();
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => const CommunityHubView()),
+          SmoothPageRoute(page: const CommunityHubView()),
         );
       },
       child: Container(

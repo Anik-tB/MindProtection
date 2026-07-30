@@ -13,6 +13,11 @@ import '../../../recovery/presentation/viewmodels/recovery_notifier.dart';
 import '../../../security/presentation/viewmodels/pin_security_provider.dart';
 import '../../../security/presentation/views/pin_verification_screen.dart';
 import '../../../dashboard/presentation/views/dashboard_view.dart';
+import '../../../wellbeing/presentation/views/guided_meditation_player_view.dart';
+import '../../../gamification/presentation/views/achievements_vault_view.dart';
+import '../../../blocking/presentation/views/scheduled_blocking_rules_view.dart';
+import '../../../theme/presentation/views/theme_customizer_view.dart';
+import '../../../../core/ui/smooth_page_route.dart';
 
 class ProfileAccountView extends ConsumerStatefulWidget {
   const ProfileAccountView({super.key});
@@ -955,6 +960,104 @@ class _ProfileAccountViewState extends ConsumerState<ProfileAccountView> {
                                     },
                                   ),
                                 ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+
+                        // Fortress Power Suite & Personalization Card
+                        LiquidGlassPanel(
+                          padding: const EdgeInsets.all(20),
+                          radius: 22,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(10),
+                                    decoration: BoxDecoration(
+                                      color: AppTheme.primary.withValues(alpha: 0.15),
+                                      borderRadius: BorderRadius.circular(14),
+                                      border: Border.all(
+                                        color: AppTheme.primary.withValues(alpha: 0.35),
+                                      ),
+                                    ),
+                                    child: const Icon(
+                                      Icons.apps_rounded,
+                                      color: AppTheme.primary,
+                                      size: 22,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 14),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Fortress Power Suite',
+                                          style: GoogleFonts.outfit(
+                                            color: AppTheme.textPrimary,
+                                            fontSize: 17,
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                        ),
+                                        Text(
+                                          'Mindfulness, Badges, Schedule Rules & Themes',
+                                          style: GoogleFonts.inter(
+                                            color: AppTheme.textSecondary,
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 18),
+                              ListTile(
+                                leading: const Icon(Icons.spa_rounded, color: Color(0xFF00D4FF)),
+                                title: Text('Mindfulness Soundscapes', style: GoogleFonts.inter(fontWeight: FontWeight.w600, color: AppTheme.textPrimary)),
+                                subtitle: Text('Ambient sound mixer & breathing sessions', style: GoogleFonts.inter(fontSize: 11, color: AppTheme.textSecondary)),
+                                trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: AppTheme.textHint),
+                                onTap: () {
+                                  HapticFeedback.lightImpact();
+                                  Navigator.push(context, SmoothPageRoute(page: const GuidedMeditationPlayerView()));
+                                },
+                              ),
+                              const Divider(height: 12),
+                              ListTile(
+                                leading: const Icon(Icons.workspace_premium_rounded, color: Color(0xFFFFB800)),
+                                title: Text('Achievements & Badges', style: GoogleFonts.inter(fontWeight: FontWeight.w600, color: AppTheme.textPrimary)),
+                                subtitle: Text('XP titles, rank progress & unlockable trophies', style: GoogleFonts.inter(fontSize: 11, color: AppTheme.textSecondary)),
+                                trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: AppTheme.textHint),
+                                onTap: () {
+                                  HapticFeedback.lightImpact();
+                                  Navigator.push(context, SmoothPageRoute(page: const AchievementsVaultView()));
+                                },
+                              ),
+                              const Divider(height: 12),
+                              ListTile(
+                                leading: const Icon(Icons.schedule_rounded, color: Color(0xFF00F5A0)),
+                                title: Text('Scheduled Blocking Rules', style: GoogleFonts.inter(fontWeight: FontWeight.w600, color: AppTheme.textPrimary)),
+                                subtitle: Text('Automated night & work focus timers', style: GoogleFonts.inter(fontSize: 11, color: AppTheme.textSecondary)),
+                                trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: AppTheme.textHint),
+                                onTap: () {
+                                  HapticFeedback.lightImpact();
+                                  Navigator.push(context, SmoothPageRoute(page: const ScheduledBlockingRulesView()));
+                                },
+                              ),
+                              const Divider(height: 12),
+                              ListTile(
+                                leading: const Icon(Icons.palette_rounded, color: Color(0xFFA29BFE)),
+                                title: Text('Theme & Visual Studio', style: GoogleFonts.inter(fontWeight: FontWeight.w600, color: AppTheme.textPrimary)),
+                                subtitle: Text('Color palettes & glassmorphism controls', style: GoogleFonts.inter(fontSize: 11, color: AppTheme.textSecondary)),
+                                trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: AppTheme.textHint),
+                                onTap: () {
+                                  HapticFeedback.lightImpact();
+                                  Navigator.push(context, SmoothPageRoute(page: const ThemeCustomizerView()));
+                                },
                               ),
                             ],
                           ),
