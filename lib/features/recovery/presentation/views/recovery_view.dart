@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../viewmodels/recovery_notifier.dart';
 import 'emergency_lock_overlay.dart';
+import 'emergency_sos_grounding_modal.dart';
+import 'relapse_trigger_journal_modal.dart';
 import '../../../blocking/data/services/android_blocking_service.dart';
 import '../../../blocking/presentation/views/app_blocker_view.dart';
 import '../../../blocking/presentation/viewmodels/app_blocker_notifier.dart';
@@ -232,6 +234,7 @@ class _RecoveryViewState extends ConsumerState<RecoveryView>
       backgroundColor: Colors.transparent,
       body: SafeArea(
         child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
           padding: const EdgeInsets.fromLTRB(20, 16, 20, 145),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -395,7 +398,10 @@ class _RecoveryViewState extends ConsumerState<RecoveryView>
                     GestureDetector(
                       onTap: () {
                         HapticFeedback.mediumImpact();
-                        _showLogDialog(context, isRelapse: true);
+                        showDialog(
+                          context: context,
+                          builder: (ctx) => const RelapseTriggerJournalModal(),
+                        );
                       },
                       child: Container(
                         padding: const EdgeInsets.all(10),
@@ -412,6 +418,98 @@ class _RecoveryViewState extends ConsumerState<RecoveryView>
               ),
               const SizedBox(height: 16),
 
+              // ── Emergency SOS Grounding Protocol ─────────────────────────
+              Container(
+                padding: const EdgeInsets.all(18),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      const Color(0xFF00D4FF).withValues(alpha: 0.15),
+                      const Color(0xFF00F5A0).withValues(alpha: 0.05),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: const Color(0xFF00D4FF).withValues(alpha: 0.35),
+                  ),
+                  boxShadow: AppTheme.cardShadow,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF00D4FF).withValues(alpha: 0.15),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.spa_rounded,
+                            color: Color(0xFF00D4FF),
+                            size: 18,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            'Emergency SOS Grounding',
+                            style: GoogleFonts.outfit(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              color: AppTheme.textPrimary,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Experiencing an urge right now? Guided 5-step CBT grounding & box breathing.',
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        color: AppTheme.textSecondary,
+                        height: 1.4,
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          HapticFeedback.heavyImpact();
+                          showDialog(
+                            context: context,
+                            builder: (ctx) => const EmergencySosGroundingModal(),
+                          );
+                        },
+                        icon: const Icon(Icons.bolt_rounded, size: 18, color: Colors.black),
+                        label: Text(
+                          'START EMERGENCY SOS',
+                          style: GoogleFonts.outfit(
+                            color: Colors.black,
+                            fontWeight: FontWeight.w800,
+                            fontSize: 13,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF00D4FF),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+
               // ── Emergency Shield ────────────────────────────────────────
               Container(
                 padding: const EdgeInsets.all(18),
@@ -421,43 +519,72 @@ class _RecoveryViewState extends ConsumerState<RecoveryView>
                   border: Border.all(color: AppTheme.border),
                   boxShadow: AppTheme.cardShadow,
                 ),
-                child: Row(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('Emergency Shield',
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: AppTheme.error.withValues(alpha: 0.15),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.shield_outlined,
+                            color: AppTheme.error,
+                            size: 18,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            'Emergency Shield',
                             style: GoogleFonts.outfit(
-                              fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.textPrimary)),
-                          const SizedBox(height: 5),
-                          Text('Intense urge? Activate absolute device lock for 15 minutes.',
-                            style: GoogleFonts.inter(fontSize: 12, color: AppTheme.textSecondary, height: 1.4)),
-                        ],
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              color: AppTheme.textPrimary,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Intense urge? Activate absolute device lock for 15 minutes.',
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        color: AppTheme.textSecondary,
+                        height: 1.4,
                       ),
                     ),
-                    const SizedBox(width: 14),
-                    GestureDetector(
-                      onTap: () {
-                        HapticFeedback.heavyImpact();
-                        recoveryNotifier.setEmergencyLock(true);
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                        decoration: BoxDecoration(
-                          color: AppTheme.error,
-                          borderRadius: BorderRadius.circular(12),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppTheme.error.withValues(alpha: 0.4),
-                              blurRadius: 12, offset: const Offset(0, 4),
-                            )
-                          ],
+                    const SizedBox(height: 14),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          HapticFeedback.heavyImpact();
+                          recoveryNotifier.setEmergencyLock(true);
+                        },
+                        icon: const Icon(Icons.lock_rounded, size: 18, color: Colors.white),
+                        label: Text(
+                          'LOCK DEVICE NOW (15 MIN)',
+                          style: GoogleFonts.outfit(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w800,
+                            fontSize: 13,
+                            letterSpacing: 0.5,
+                          ),
                         ),
-                        child: Text('LOCK NOW',
-                          style: GoogleFonts.inter(
-                            color: Colors.white, fontWeight: FontWeight.w800,
-                            fontSize: 12, letterSpacing: 0.5)),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.error,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          elevation: 4,
+                          shadowColor: AppTheme.error.withValues(alpha: 0.4),
+                        ),
                       ),
                     ),
                   ],
