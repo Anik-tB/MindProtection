@@ -41,13 +41,15 @@ class _LiquidBackgroundState extends State<LiquidBackground> with SingleTickerPr
       child: Stack(
         children: [
           Positioned.fill(
-            child: AnimatedBuilder(
-              animation: _animation,
-              builder: (context, _) {
-                return CustomPaint(
-                  painter: _LiquidFieldPainter(progress: _animation.value),
-                );
-              },
+            child: RepaintBoundary(
+              child: AnimatedBuilder(
+                animation: _animation,
+                builder: (context, _) {
+                  return CustomPaint(
+                    painter: _LiquidFieldPainter(progress: _animation.value),
+                  );
+                },
+              ),
             ),
           ),
           Positioned.fill(child: widget.child),
@@ -81,28 +83,30 @@ class LiquidGlassPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final panel = Container(
-      margin: margin,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(radius),
-        boxShadow: shadows ?? AppTheme.cardShadow,
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(radius),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
-          child: Container(
-            padding: padding,
-            decoration: BoxDecoration(
-              color: tint ?? AppTheme.glassFill,
-              borderRadius: BorderRadius.circular(radius),
-              border: Border.all(
-                color: borderColor ?? AppTheme.glassStroke,
-                width: 1.2,
+    final panel = RepaintBoundary(
+      child: Container(
+        margin: margin,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(radius),
+          boxShadow: shadows ?? AppTheme.cardShadow,
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(radius),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+            child: Container(
+              padding: padding,
+              decoration: BoxDecoration(
+                color: tint ?? AppTheme.glassFill,
+                borderRadius: BorderRadius.circular(radius),
+                border: Border.all(
+                  color: borderColor ?? AppTheme.glassStroke,
+                  width: 1.2,
+                ),
+                gradient: tint == null ? AppTheme.cardGradient : null,
               ),
-              gradient: tint == null ? AppTheme.cardGradient : null,
+              child: child,
             ),
-            child: child,
           ),
         ),
       ),
