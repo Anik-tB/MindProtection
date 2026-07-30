@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:mind_protection/core/theme/app_theme.dart';
+import '../../../../core/theme/app_theme.dart';
+import '../../../../core/ui/mind_protection_logo.dart';
 
 // ─────────────────────────────────────────────
 // Shared Premium Auth Widgets
@@ -13,57 +14,7 @@ class AuthBrandHero extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        // Logo with glow ring
-        Stack(
-          alignment: Alignment.center,
-          children: [
-            Container(
-              width: 110,
-              height: 110,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [
-                    AppTheme.primary.withValues(alpha: 0.28),
-                    AppTheme.primary.withValues(alpha: 0.0),
-                  ],
-                ),
-              ),
-            ),
-            Container(
-              width: 86,
-              height: 86,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(24),
-                gradient: const LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [Color(0xFF2A1810), Color(0xFF160E0B)],
-                ),
-                border: Border.all(
-                  color: AppTheme.primary.withValues(alpha: 0.5),
-                  width: 1.5,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppTheme.primary.withValues(alpha: 0.30),
-                    blurRadius: 28,
-                    spreadRadius: 2,
-                  ),
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.40),
-                    blurRadius: 16,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(22),
-                child: Image.asset('assets/logo.png', fit: BoxFit.cover),
-              ),
-            ),
-          ],
-        ),
+        const MindProtectionLogo(size: 92),
         const SizedBox(height: 22),
 
         // App name with gradient
