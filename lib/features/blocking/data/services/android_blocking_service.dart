@@ -106,6 +106,24 @@ class AndroidBlockingService {
     }
   }
 
+  /// Sets Anti-Uninstall Protection flag in native Accessibility Service
+  static Future<void> setAntiUninstallActive(bool active) async {
+    try {
+      await _channel.invokeMethod('setAntiUninstallActive', {'active': active});
+    } on PlatformException catch (_) {
+      // Catch exceptions silently
+    }
+  }
+
+  /// Sets OS Settings Protection flag in native Accessibility Service
+  static Future<void> setSettingGuardActive(bool active) async {
+    try {
+      await _channel.invokeMethod('setSettingGuardActive', {'active': active});
+    } on PlatformException catch (_) {
+      // Catch exceptions silently
+    }
+  }
+
   /// Starts the Wellbeing Foreground Service
   static Future<void> startForegroundService() async {
     try {

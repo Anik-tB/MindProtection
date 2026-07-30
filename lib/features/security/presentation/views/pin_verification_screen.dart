@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -32,6 +33,8 @@ class _PinVerificationScreenState extends ConsumerState<PinVerificationScreen>
   late AnimationController _shakeController;
   late Animation<double> _shakeAnimation;
 
+  late List<int> _keypadDigits;
+
   @override
   void initState() {
     super.initState();
@@ -43,7 +46,17 @@ class _PinVerificationScreenState extends ConsumerState<PinVerificationScreen>
         .chain(CurveTween(curve: Curves.elasticIn))
         .animate(_shakeController);
 
+    _initKeypadDigits();
     _startLockoutTimerIfNeeded();
+  }
+
+  void _initKeypadDigits() {
+    final isScrambled = ref.read(pinSecurityProvider).isScrambledKeypadEnabled;
+    final digits = List<int>.generate(10, (i) => i);
+    if (isScrambled) {
+      digits.shuffle(Random());
+    }
+    _keypadDigits = digits;
   }
 
   @override
@@ -167,14 +180,37 @@ class _PinVerificationScreenState extends ConsumerState<PinVerificationScreen>
                 ),
               ),
               const SizedBox(height: 8),
-              Text(
-                isLocked
-                    ? 'Security Lock Active'
-                    : 'Enter verification code to proceed.',
-                style: GoogleFonts.inter(
-                  fontSize: 13,
-                  color: AppTheme.textSecondary,
-                ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    isLocked
+                        ? 'Security Lock Active'
+                        : 'Enter verification code to proceed.',
+                    style: GoogleFonts.inter(
+                      fontSize: 13,
+                      color: AppTheme.textSecondary,
+                    ),
+                  ),
+                  if (securityState.isScrambledKeypadEnabled && !isLocked) ...[
+                    const SizedBox(width: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: AppTheme.primary.withValues(alpha: 0.14),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        '🛡️ Scrambled',
+                        style: GoogleFonts.inter(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          color: AppTheme.primary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
               ),
 
               const Spacer(flex: 1),
@@ -232,7 +268,7 @@ class _PinVerificationScreenState extends ConsumerState<PinVerificationScreen>
 
               const Spacer(flex: 1),
 
-              // Keypad numeric panel
+              // Keypad numeric panel (scrambled or ordered)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 36),
                 child: Column(
@@ -240,36 +276,35 @@ class _PinVerificationScreenState extends ConsumerState<PinVerificationScreen>
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
-                        _buildKey(1, isLocked),
-                        _buildKey(2, isLocked),
-                        _buildKey(3, isLocked),
+                        _buildKey(_keypadDigits[0], isLocked),
+                        _buildKey(_keypadDigits[1], isLocked),
+                        _buildKey(_keypadDigits[2], isLocked),
                       ],
                     ),
                     const SizedBox(height: 18),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
-                        _buildKey(4, isLocked),
-                        _buildKey(5, isLocked),
-                        _buildKey(6, isLocked),
+                        _buildKey(_keypadDigits[3], isLocked),
+                        _buildKey(_keypadDigits[4], isLocked),
+                        _buildKey(_keypadDigits[5], isLocked),
                       ],
                     ),
                     const SizedBox(height: 18),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
-                        _buildKey(7, isLocked),
-                        _buildKey(8, isLocked),
-                        _buildKey(9, isLocked),
+                        _buildKey(_keypadDigits[6], isLocked),
+                        _buildKey(_keypadDigits[7], isLocked),
+                        _buildKey(_keypadDigits[8], isLocked),
                       ],
                     ),
                     const SizedBox(height: 18),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
-                        // Empty spacer or close button
                         const SizedBox(width: 72, height: 72),
-                        _buildKey(0, isLocked),
+                        _buildKey(_keypadDigits[9], isLocked),
                         _buildDeleteKey(isLocked),
                       ],
                     ),
