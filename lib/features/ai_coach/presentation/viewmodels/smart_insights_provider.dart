@@ -165,7 +165,6 @@ final smartInsightsProvider = FutureProvider<List<InsightCardModel>>((
       : logs.fold<double>(0.0, (sum, l) => sum + l.waterIntakeLiters) /
             logs.length;
   if (avgWater > 0.0) {
-    final status = avgWater >= 1.8 ? 'Excellent hydration' : 'Need more fluids';
     insightsList.add(
       InsightCardModel(
         title: 'Hydration Consistency',

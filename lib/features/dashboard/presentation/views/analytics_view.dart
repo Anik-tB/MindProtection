@@ -12,6 +12,7 @@ import '../../../focus/presentation/viewmodels/focus_timer_notifier.dart';
 import '../../../focus/presentation/views/subject_focus_breakdown_card.dart';
 import '../viewmodels/screen_time_provider.dart';
 import '../../../ai_coach/presentation/viewmodels/smart_insights_provider.dart';
+import '../../../../core/services/data_export_service.dart';
 
 class AnalyticsView extends ConsumerWidget {
   const AnalyticsView({super.key});
@@ -64,6 +65,8 @@ class AnalyticsView extends ConsumerWidget {
           const _DisciplineGrid(),
           const SizedBox(height: 14),
           const _ExportPanel(),
+          const SizedBox(height: 14),
+          const _DataExportPanel(),
         ],
       ),
     );
@@ -1185,6 +1188,120 @@ class _AiSmartInsightsSection extends ConsumerWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _DataExportPanel extends StatelessWidget {
+  const _DataExportPanel();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: AppTheme.surfaceCard,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: AppTheme.borderAccent),
+        boxShadow: AppTheme.cardShadow,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppTheme.primary.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.download_rounded, color: AppTheme.primary, size: 20),
+              ),
+              const SizedBox(width: 10),
+              Text(
+                'Data Export & Backup',
+                style: GoogleFonts.outfit(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: AppTheme.textPrimary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Export your focus sessions, habit history, and sobriety streaks in JSON or CSV format.',
+            style: GoogleFonts.inter(fontSize: 12, color: AppTheme.textSecondary, height: 1.4),
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () async {
+                    HapticFeedback.mediumImpact();
+                    final jsonStr = await DataExportService.generateCompleteJsonBackup();
+                    Clipboard.setData(ClipboardData(text: jsonStr));
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          backgroundColor: AppTheme.surfaceCard,
+                          content: Row(
+                            children: [
+                              const Icon(Icons.check_circle_rounded, color: AppTheme.primary),
+                              const SizedBox(width: 8),
+                              Text('JSON Vault Backup copied to clipboard!',
+                                style: GoogleFonts.inter(color: AppTheme.textPrimary)),
+                            ],
+                          ),
+                        ),
+                      );
+                    }
+                  },
+                  icon: const Icon(Icons.code_rounded, size: 16, color: AppTheme.primary),
+                  label: Text('Export JSON', style: GoogleFonts.outfit(fontWeight: FontWeight.w600, color: AppTheme.primary)),
+                  style: OutlinedButton.styleFrom(
+                    side: BorderSide(color: AppTheme.primary.withValues(alpha: 0.4)),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: () async {
+                    HapticFeedback.mediumImpact();
+                    final csvStr = await DataExportService.generateFocusCsvReport();
+                    Clipboard.setData(ClipboardData(text: csvStr));
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          backgroundColor: AppTheme.surfaceCard,
+                          content: Row(
+                            children: [
+                              const Icon(Icons.check_circle_rounded, color: AppTheme.secondary),
+                              const SizedBox(width: 8),
+                              Text('Focus CSV Report copied to clipboard!',
+                                style: GoogleFonts.inter(color: AppTheme.textPrimary)),
+                            ],
+                          ),
+                        ),
+                      );
+                    }
+                  },
+                  icon: const Icon(Icons.table_chart_rounded, size: 16, color: Colors.black),
+                  label: Text('Export CSV', style: GoogleFonts.outfit(fontWeight: FontWeight.w700, color: Colors.black)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.secondary,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
