@@ -9,10 +9,7 @@ import '../viewmodels/smart_insights_provider.dart';
 class AiSmartInsightsCard extends ConsumerWidget {
   final VoidCallback? onAskCoachTap;
 
-  const AiSmartInsightsCard({
-    super.key,
-    this.onAskCoachTap,
-  });
+  const AiSmartInsightsCard({super.key, this.onAskCoachTap});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -103,7 +100,9 @@ class AiSmartInsightsCard extends ConsumerWidget {
                                 color: AppTheme.primary.withValues(alpha: 0.15),
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
-                                  color: AppTheme.primary.withValues(alpha: 0.3),
+                                  color: AppTheme.primary.withValues(
+                                    alpha: 0.3,
+                                  ),
                                 ),
                               ),
                               child: Row(
@@ -155,7 +154,7 @@ class AiSmartInsightsCard extends ConsumerWidget {
           child: CircularProgressIndicator(),
         ),
       ),
-      error: (_, __) => const SizedBox.shrink(),
+      error: (_, _) => const SizedBox.shrink(),
     );
   }
 }
@@ -172,9 +171,7 @@ class _InsightItemTile extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppTheme.surfaceCard.withValues(alpha: 0.6),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: item.color.withValues(alpha: 0.22),
-        ),
+        border: Border.all(color: item.color.withValues(alpha: 0.22)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -185,11 +182,7 @@ class _InsightItemTile extends StatelessWidget {
               color: item.color.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(14),
             ),
-            child: Icon(
-              item.icon,
-              color: item.color,
-              size: 20,
-            ),
+            child: Icon(item.icon, color: item.color, size: 20),
           ),
           const SizedBox(width: 12),
           Expanded(

@@ -86,7 +86,7 @@ class NotificationVaultView extends ConsumerWidget {
                             )
                           : const SizedBox.shrink(),
                       loading: () => const SizedBox.shrink(),
-                      error: (_, __) => const SizedBox.shrink(),
+                      error: (_, _) => const SizedBox.shrink(),
                     ),
                   ],
                 ),
@@ -160,7 +160,7 @@ class NotificationVaultView extends ConsumerWidget {
                   loading: () => const Center(
                     child: CircularProgressIndicator(),
                   ),
-                  error: (err, __) => Center(
+                  error: (err, _) => Center(
                     child: Text(
                       'Error loading vault: $err',
                       style: GoogleFonts.inter(color: AppTheme.error),
